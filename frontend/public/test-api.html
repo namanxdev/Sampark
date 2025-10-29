@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Backend API Test</h1>
+    
+    <div>
+        <h2>Test Login</h2>
+        <button onclick="testLogin()">Test Admin Login</button>
+        <pre id="result"></pre>
+    </div>
+
+    <script>
+        async function testLogin() {
+            const resultEl = document.getElementById('result');
+            resultEl.textContent = 'Testing...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('username', 'admin');
+                formData.append('password', 'admin123');
+
+                const response = await fetch('http://localhost:8000/api/auth/login', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const data = await response.json();
+                resultEl.textContent = JSON.stringify(data, null, 2);
+                
+                if (response.ok) {
+                    resultEl.style.color = 'green';
+                } else {
+                    resultEl.style.color = 'red';
+                }
+            } catch (error) {
+                resultEl.textContent = 'Error: ' + error.message;
+                resultEl.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>
