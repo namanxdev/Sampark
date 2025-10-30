@@ -142,6 +142,8 @@ export const SyncProvider = ({ children }) => {
     try {
       const result = await syncService.syncNow();
       await updateSyncStatus();
+      // Dispatch custom event to notify components that sync completed
+      window.dispatchEvent(new CustomEvent('syncCompleted', { detail: result }));
       return result;
     } catch (error) {
       console.error('Failed to trigger sync:', error);
@@ -153,6 +155,8 @@ export const SyncProvider = ({ children }) => {
     try {
       const result = await syncService.fullSync();
       await updateSyncStatus();
+      // Dispatch custom event to notify components that sync completed
+      window.dispatchEvent(new CustomEvent('syncCompleted', { detail: result }));
       return result;
     } catch (error) {
       console.error('Failed to trigger full sync:', error);

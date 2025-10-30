@@ -26,7 +26,8 @@ async def create_survey(
     
     Handles:
     - New survey creation
-    - Conflict detection if survey already exists
+    - Update if survey already exists (upsert behavior for sync)
+    - Conflict detection based on timestamps
     """
     # Check if survey already exists
     existing_survey = db.query(Survey).filter(
@@ -34,19 +35,55 @@ async def create_survey(
     ).first()
     
     if existing_survey:
-        # Conflict detected - check timestamps
-        conflicts = detect_conflicts(existing_survey, survey)
+        # Survey exists - update it instead of creating
+        print(f"Survey {survey.survey_id} already exists, updating instead of creating")
         
-        if conflicts:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail={
-                    "status": "conflict",
-                    "survey_id": survey.survey_id,
-                    "conflicts": conflicts,
-                    "message": "Data conflict detected"
-                }
-            )
+        # Check for conflicts based on timestamps
+        if survey.client_timestamp and existing_survey.server_timestamp:
+            client_ts = survey.client_timestamp
+            server_ts = existing_survey.server_timestamp
+            
+            # Make both timezone-naive for comparison
+            if client_ts.tzinfo is not None:
+                client_ts = client_ts.replace(tzinfo=None)
+            if server_ts.tzinfo is not None:
+                server_ts = server_ts.replace(tzinfo=None)
+            
+            # Only raise conflict if server is newer AND data actually differs
+            if server_ts > client_ts:
+                conflicts = detect_conflicts(existing_survey, survey)
+                if conflicts:
+                    raise HTTPException(
+                        status_code=status.HTTP_409_CONFLICT,
+                        detail={
+                            "status": "conflict",
+                            "survey_id": survey.survey_id,
+                            "conflicts": conflicts,
+                            "message": "Data conflict detected"
+                        }
+                    )
+        
+        # Update existing survey with new data
+        existing_survey.village_name = survey.village_name
+        existing_survey.basic_info = survey.basic_info
+        existing_survey.infrastructure = survey.infrastructure
+        existing_survey.sanitation = survey.sanitation
+        existing_survey.connectivity = survey.connectivity
+        existing_survey.land_forest = survey.land_forest
+        existing_survey.electricity = survey.electricity
+        existing_survey.waste_management = survey.waste_management
+        existing_survey.completion_percentage = survey.completion_percentage
+        existing_survey.is_complete = survey.is_complete
+        existing_survey.sync_status = "synced"
+        existing_survey.last_synced_at = datetime.utcnow()
+        existing_survey.client_timestamp = survey.client_timestamp
+        existing_survey.server_timestamp = datetime.utcnow()
+        existing_survey.version += 1
+        
+        db.commit()
+        db.refresh(existing_survey)
+        
+        return existing_survey
     
     # Create new survey
     db_survey = Survey(
@@ -202,9 +239,14 @@ async def update_survey(
 async def delete_survey(
     survey_id: str,
     db: Session = Depends(get_db),
-    current_user: User = Depends(check_admin_role)  # Only admins can delete
+    current_user: User = Depends(get_current_user)  # Allow any authenticated user
 ):
-    """Delete a survey (admin only)"""
+    """
+    Delete a survey
+    
+    - Admins/block officers can delete any survey
+    - Staff can only delete surveys from their own panchayat
+    """
     survey = db.query(Survey).filter(Survey.survey_id == survey_id).first()
     
     if not survey:
@@ -212,6 +254,16 @@ async def delete_survey(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Survey not found"
         )
+    
+    # Check permissions
+    if current_user.role == "staff":
+        # Staff can only delete surveys from their own panchayat
+        if survey.panchayat_id != current_user.panchayat_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You can only delete surveys from your own panchayat"
+            )
+    # Admins and block officers can delete any survey (no additional check needed)
     
     db.delete(survey)
     db.commit()

@@ -3,11 +3,28 @@ import indexedDBService from './indexedDBService';
 
 const isOnline = () => navigator.onLine;
 
+// Ensure IndexedDB is initialized before any operations
+let dbInitialized = false;
+const ensureDBInitialized = async () => {
+  if (!dbInitialized) {
+    try {
+      await indexedDBService.init();
+      dbInitialized = true;
+      console.log('✅ IndexedDB initialized');
+    } catch (error) {
+      console.error('❌ Failed to initialize IndexedDB:', error);
+      throw error;
+    }
+  }
+};
+
 export const surveyService = {
   /**
    * Get all surveys - merge server and local data
    */
   async getSurveys(params = {}) {
+    await ensureDBInitialized();
+    
     let serverSurveys = [];
     let localSurveys = [];
 
@@ -16,18 +33,40 @@ export const surveyService = {
       if (isOnline()) {
         const response = await api.get('/api/surveys', { params });
         serverSurveys = response.data;
-        console.log(`Fetched ${serverSurveys.length} surveys from server`);
+        console.log(`✅ Fetched ${serverSurveys.length} surveys from server`);
+        
+        // Save server surveys to IndexedDB (marked as synced, without adding to queue)
+        for (const serverSurvey of serverSurveys) {
+          const existing = await indexedDBService.getSurveyById(serverSurvey.survey_id);
+          if (existing) {
+            // Update existing survey
+            await indexedDBService.updateSurvey(existing.id, {
+              ...serverSurvey,
+              synced: true,
+              synced_at: new Date().toISOString(),
+            }, false); // false = don't add to sync queue!
+          } else {
+            // Save new survey from server
+            await indexedDBService.saveSurvey({
+              ...serverSurvey,
+              synced: true,
+              synced_at: new Date().toISOString(),
+              local_id: `server_${serverSurvey.survey_id}`,
+            }, false); // false = don't add to sync queue!
+          }
+        }
+        console.log(`💾 Saved ${serverSurveys.length} surveys to IndexedDB`);
       }
     } catch (error) {
-      console.log('Failed to fetch from server:', error.message);
+      console.log('⚠️ Failed to fetch from server:', error.message);
     }
 
     // Always get local surveys
     try {
       localSurveys = await indexedDBService.getAllSurveys(params);
-      console.log(`Found ${localSurveys.length} surveys in IndexedDB`);
+      console.log(`✅ Found ${localSurveys.length} surveys in IndexedDB`);
     } catch (error) {
-      console.log('Failed to fetch from IndexedDB:', error.message);
+      console.log('❌ Failed to fetch from IndexedDB:', error.message);
     }
 
     // Merge: local unsynced data takes priority over server data
@@ -77,34 +116,38 @@ export const surveyService = {
    * Get survey by ID - merge server and local data
    */
   async getSurveyById(surveyId) {
+    await ensureDBInitialized();
+    
+    console.log('🔍 getSurveyById called with:', surveyId);
     let serverSurvey = null;
     let localSurvey = null;
 
-    // Try to get from server if online
-    try {
-      if (isOnline()) {
+    // Try to get from server if online (but only if it's not a local-only ID)
+    if (isOnline() && surveyId && !String(surveyId).startsWith('local_')) {
+      try {
         const response = await api.get(`/api/surveys/${surveyId}`);
         serverSurvey = response.data;
-        console.log('Fetched survey from server:', surveyId);
+        console.log('✅ Fetched survey from server:', surveyId);
+      } catch (error) {
+        console.log('⚠️ Failed to fetch survey from server:', error.message);
       }
-    } catch (error) {
-      console.log('Failed to fetch survey from server:', error.message);
     }
 
     // Always check IndexedDB
     try {
-      const surveys = await indexedDBService.getAllSurveys();
-      localSurvey = surveys.find(s => s.survey_id === surveyId || s.local_id === surveyId);
+      localSurvey = await indexedDBService.getSurveyById(surveyId);
       if (localSurvey) {
-        console.log('Found survey in IndexedDB:', surveyId, 'synced:', localSurvey.synced);
+        console.log('✅ Found survey in IndexedDB:', surveyId, 'synced:', localSurvey.synced);
+      } else {
+        console.log('⚠️ Survey not found in IndexedDB:', surveyId);
       }
     } catch (error) {
-      console.log('Failed to fetch from IndexedDB:', error.message);
+      console.log('❌ Failed to fetch from IndexedDB:', error.message);
     }
 
     // Prioritize local unsynced data
     if (localSurvey && !localSurvey.synced) {
-      console.log('Using local unsynced version of survey');
+      console.log('📍 Using local unsynced version of survey');
       return localSurvey;
     }
 
@@ -114,23 +157,24 @@ export const surveyService = {
       const serverTime = new Date(serverSurvey.updated_at || serverSurvey.server_timestamp).getTime();
       
       if (localTime > serverTime) {
-        console.log('Using local version (newer)');
+        console.log('📍 Using local version (newer)');
         return localSurvey;
       }
-      console.log('Using server version (newer)');
+      console.log('☁️ Using server version (newer)');
       return serverSurvey;
     }
 
     // Return whichever exists
     if (localSurvey) {
-      console.log('Using local version (only source)');
+      console.log('📍 Using local version (only source)');
       return localSurvey;
     }
     if (serverSurvey) {
-      console.log('Using server version (only source)');
+      console.log('☁️ Using server version (only source)');
       return serverSurvey;
     }
 
+    console.error('❌ Survey not found:', surveyId);
     throw new Error('Survey not found');
   },
 
@@ -138,6 +182,8 @@ export const surveyService = {
    * Create survey - save to IndexedDB first, then sync
    */
   async createSurvey(surveyData) {
+    await ensureDBInitialized();
+    
     // Generate a temporary local ID
     const localId = `local_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
@@ -178,31 +224,34 @@ export const surveyService = {
    * Update survey - save to IndexedDB first, then sync
    */
   async updateSurvey(surveyId, surveyData) {
-    // Find survey in IndexedDB
-    const surveys = await indexedDBService.getAllSurveys();
-    const localSurvey = surveys.find(
-      s => s.survey_id === surveyId || s.local_id === surveyId
-    );
+    await ensureDBInitialized();
+    
+    console.log('🔄 updateSurvey called with:', surveyId);
+    
+    // Find survey in IndexedDB using the improved getSurveyById
+    const localSurvey = await indexedDBService.getSurveyById(surveyId);
 
     if (localSurvey) {
-      // Update in IndexedDB
+      // Update in IndexedDB using the IndexedDB ID
       await indexedDBService.updateSurvey(localSurvey.id, surveyData);
-      console.log('Survey updated in IndexedDB');
+      console.log('✅ Survey updated in IndexedDB');
     } else {
       // Create new local survey
+      console.log('⚠️ Survey not found locally, creating new entry');
       await indexedDBService.saveSurvey({
         ...surveyData,
         survey_id: surveyId,
       });
     }
 
-    // Try to sync immediately if online
-    if (isOnline()) {
+    // Try to sync immediately if online (but only if it's a server ID)
+    if (isOnline() && surveyId && !String(surveyId).startsWith('local_')) {
       try {
         const response = await api.put(`/api/surveys/${surveyId}`, surveyData);
+        console.log('✅ Survey synced to server');
         return response.data;
       } catch (error) {
-        console.log('Failed to sync immediately, will sync later:', error.message);
+        console.log('⚠️ Failed to sync immediately, will sync later:', error.message);
         
         // Return local data
         const updatedSurvey = await this.getSurveyById(surveyId);
@@ -210,7 +259,7 @@ export const surveyService = {
       }
     }
 
-    // Return local data if offline
+    // Return local data if offline or local-only ID
     const updatedSurvey = await this.getSurveyById(surveyId);
     return updatedSurvey;
   },
@@ -219,28 +268,43 @@ export const surveyService = {
    * Delete survey - mark in IndexedDB, then sync
    */
   async deleteSurvey(surveyId) {
-    // Find and delete from IndexedDB
-    const surveys = await indexedDBService.getAllSurveys();
-    const localSurvey = surveys.find(
-      s => s.survey_id === surveyId || s.local_id === surveyId
-    );
+    await ensureDBInitialized();
+    
+    console.log('🗑️ deleteSurvey called with:', surveyId);
+    
+    // Find and delete from IndexedDB using improved method
+    const localSurvey = await indexedDBService.getSurveyById(surveyId);
 
     if (localSurvey) {
       await indexedDBService.deleteSurvey(localSurvey.id);
-      console.log('Survey marked for deletion in IndexedDB');
+      console.log('✅ Survey deleted from IndexedDB');
+    } else {
+      console.log('⚠️ Survey not found in IndexedDB');
     }
 
-    // Try to delete on server immediately if online
-    if (isOnline() && surveyId && !surveyId.startsWith('local_')) {
+    // Try to delete on server immediately if online (but only if it's a server ID)
+    if (isOnline() && surveyId && !String(surveyId).startsWith('local_')) {
       try {
-        const response = await api.delete(`/api/surveys/${surveyId}`);
-        return response.data;
+        await api.delete(`/api/surveys/${surveyId}`);
+        console.log('✅ Survey deleted from server');
+        return { message: 'Survey deleted successfully', deleted: true };
       } catch (error) {
-        console.log('Failed to delete on server, will sync later:', error.message);
+        console.error('❌ Failed to delete on server:', error.response?.status, error.message);
+        
+        // If it's a 403 or 401, throw the error so user knows about permission issue
+        if (error.response?.status === 403) {
+          throw new Error('You do not have permission to delete this survey');
+        } else if (error.response?.status === 401) {
+          throw new Error('You must be logged in to delete surveys');
+        } else if (error.response?.status === 404) {
+          console.log('⚠️ Survey not found on server (already deleted or never synced)');
+        } else {
+          console.log('⚠️ Failed to delete on server, will sync later:', error.message);
+        }
       }
     }
 
-    return { message: 'Survey deleted locally' };
+    return { message: 'Survey deleted locally', deleted: true };
   },
 
   /**

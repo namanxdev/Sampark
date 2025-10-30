@@ -80,7 +80,7 @@ class Survey(Base):
     # Relationships
     panchayat = relationship("Panchayat", back_populates="surveys")
     user = relationship("User", back_populates="surveys")
-    sync_logs = relationship("SyncLog", back_populates="survey")
+    sync_logs = relationship("SyncLog", back_populates="survey", cascade="all, delete-orphan")
 
 
 class SyncLog(Base):

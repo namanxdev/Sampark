@@ -6,6 +6,7 @@ import {
   FiRefreshCw, FiEdit, FiTrash2, FiEye 
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useSync } from '../context/SyncContext';
 import { useSurveys } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import Card from '../components/Card';
@@ -15,6 +16,7 @@ import toast from 'react-hot-toast';
 
 const Surveys = () => {
   const { panchayat, user } = useAuth();
+  const { isOnline } = useSync();
   const { surveys, loading, refetch } = useSurveys(panchayat?.panchayat_id);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -34,13 +36,25 @@ const Surveys = () => {
   };
 
   const handleDelete = async (surveyId) => {
-    if (window.confirm('Are you sure you want to delete this survey?')) {
+    // Different confirmation messages based on online/offline status
+    const confirmMessage = isOnline 
+      ? 'Are you sure you want to delete this survey? This action cannot be undone.'
+      : 'You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?';
+    
+    if (window.confirm(confirmMessage)) {
       try {
         await surveyService.deleteSurvey(surveyId);
-        toast.success('Survey deleted successfully');
+        
+        if (isOnline) {
+          toast.success('Survey deleted successfully!');
+        } else {
+          toast.success('Survey deleted locally. Will sync when online.');
+        }
+        
         refetch();
       } catch (error) {
-        toast.error('Failed to delete survey');
+        console.error('Delete error:', error);
+        toast.error('Failed to delete survey. Please try again.');
       }
     }
   };
@@ -157,8 +171,8 @@ const Surveys = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredSurveys.map((survey, index) => {
-              // Use survey_id or local_id as the identifier
-              const surveyIdentifier = survey.survey_id || survey.local_id;
+              // Use survey_id, local_id, or IndexedDB id as the identifier (priority order)
+              const surveyIdentifier = survey.survey_id || survey.local_id || survey.id;
               
               return (
               <motion.div
@@ -234,20 +248,20 @@ const Surveys = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className="btn btn-ghost btn-sm"
+                          title="Edit survey"
                         >
                           <FiEdit />
                         </motion.button>
                       </Link>
-                      {user?.role === 'admin' && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleDelete(surveyIdentifier)}
-                          className="btn btn-ghost btn-sm text-error"
-                        >
-                          <FiTrash2 />
-                        </motion.button>
-                      )}
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleDelete(surveyIdentifier)}
+                        className="btn btn-ghost btn-sm text-error"
+                        title="Delete survey"
+                      >
+                        <FiTrash2 />
+                      </motion.button>
                     </div>
                   </div>
                 </Card>

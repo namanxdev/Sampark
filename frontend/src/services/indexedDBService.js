@@ -1,3 +1,4 @@
+
 /**
  * IndexedDB Service for Offline Data Storage
  * Stores survey data locally when offline and syncs when online
@@ -112,7 +113,7 @@ class IndexedDBService {
   /**
    * Save survey to IndexedDB
    */
-  async saveSurvey(surveyData) {
+  async saveSurvey(surveyData, addToSyncQueue = true) {
     try {
       const transaction = this.getTransaction(STORES.SURVEYS, 'readwrite');
       const store = transaction.objectStore(STORES.SURVEYS);
@@ -131,13 +132,15 @@ class IndexedDBService {
         request.onsuccess = async () => {
           console.log('Survey saved to IndexedDB:', request.result);
           
-          // Add to pending sync queue
-          await this.addToPendingSync({
-            action: surveyData.survey_id ? 'update' : 'create',
-            data: survey,
-            local_id: survey.local_id,
-            survey_id: surveyData.survey_id,
-          });
+          // Add to pending sync queue only if flag is true
+          if (addToSyncQueue) {
+            await this.addToPendingSync({
+              action: surveyData.survey_id ? 'update' : 'create',
+              data: survey,
+              local_id: survey.local_id,
+              survey_id: surveyData.survey_id,
+            });
+          }
 
           resolve(request.result);
         };
@@ -190,25 +193,39 @@ class IndexedDBService {
   }
 
   /**
-   * Get survey by ID
+   * Get survey by ID - supports IndexedDB id, survey_id, or local_id
    */
   async getSurveyById(id) {
     try {
-      const transaction = this.getTransaction(STORES.SURVEYS, 'readonly');
-      const store = transaction.objectStore(STORES.SURVEYS);
+      // First, try to get by IndexedDB id (numeric)
+      if (typeof id === 'number') {
+        const transaction = this.getTransaction(STORES.SURVEYS, 'readonly');
+        const store = transaction.objectStore(STORES.SURVEYS);
 
-      return new Promise((resolve, reject) => {
-        const request = store.get(id);
+        return new Promise((resolve, reject) => {
+          const request = store.get(id);
 
-        request.onsuccess = () => {
-          resolve(request.result);
-        };
+          request.onsuccess = () => {
+            resolve(request.result);
+          };
 
-        request.onerror = () => {
-          console.error('Error getting survey:', request.error);
-          reject(request.error);
-        };
-      });
+          request.onerror = () => {
+            console.error('Error getting survey:', request.error);
+            reject(request.error);
+          };
+        });
+      }
+
+      // If string ID, search through all surveys
+      const surveys = await this.getAllSurveys();
+      const survey = surveys.find(s => 
+        s.survey_id === id || 
+        s.local_id === id || 
+        s.id === id ||
+        String(s.id) === String(id)
+      );
+      
+      return survey || null;
     } catch (error) {
       console.error('Error in getSurveyById:', error);
       throw error;
@@ -218,7 +235,7 @@ class IndexedDBService {
   /**
    * Update survey in IndexedDB
    */
-  async updateSurvey(id, updates) {
+  async updateSurvey(id, updates, addToSyncQueue = true) {
     try {
       const survey = await this.getSurveyById(id);
       if (!survey) {
@@ -232,7 +249,7 @@ class IndexedDBService {
         synced: false,
       };
 
-      return await this.saveSurvey(updatedSurvey);
+      return await this.saveSurvey(updatedSurvey, addToSyncQueue);
     } catch (error) {
       console.error('Error in updateSurvey:', error);
       throw error;
@@ -439,25 +456,14 @@ class IndexedDBService {
       const survey = surveys.find(s => s.local_id === localId);
 
       if (survey) {
-        survey.survey_id = serverId;
-        survey.synced = true;
-        survey.synced_at = new Date().toISOString();
-
-        const transaction = this.getTransaction(STORES.SURVEYS, 'readwrite');
-        const store = transaction.objectStore(STORES.SURVEYS);
-
-        return new Promise((resolve, reject) => {
-          const request = store.put(survey);
-
-          request.onsuccess = () => {
-            console.log('Survey updated with server ID');
-            resolve();
-          };
-
-          request.onerror = () => {
-            reject(request.error);
-          };
-        });
+        // Update using updateSurvey with addToSyncQueue=false to prevent infinite loop
+        await this.updateSurvey(survey.id, {
+          survey_id: serverId,
+          synced: true,
+          synced_at: new Date().toISOString(),
+        }, false); // DON'T add to sync queue during sync!
+        
+        console.log('Survey updated with server ID');
       }
     } catch (error) {
       console.error('Error in updateSurveyWithServerId:', error);

@@ -279,6 +279,7 @@ class SyncService {
 
       console.log('📤 Syncing survey to server:', {
         local_id: localId,
+        survey_id: cleanData.survey_id,
         village_name: cleanData.village_name,
         panchayat_id: cleanData.panchayat_id,
         fields: Object.keys(cleanData),
@@ -287,13 +288,39 @@ class SyncService {
       // Call API directly (not through surveyService to avoid duplicate IndexedDB writes)
       const response = await api.post('/api/surveys', cleanData);
       
-      // Update local survey with server ID
+      // Update local survey with server ID and mark as synced
       await indexedDBService.updateSurveyWithServerId(localId, response.data.survey_id);
       
-      console.log('✅ Survey created on server:', response.data.survey_id, 'for village:', response.data.village_name);
+      // Also mark as synced (WITHOUT adding to sync queue)
+      const surveys = await indexedDBService.getAllSurveys();
+      const localSurvey = surveys.find(s => s.local_id === localId);
+      if (localSurvey) {
+        await indexedDBService.updateSurvey(localSurvey.id, {
+          synced: true,
+          synced_at: new Date().toISOString(),
+        }, false); // false = don't add to sync queue!
+      }
+      
+      console.log('✅ Survey synced to server:', response.data.survey_id, 'for village:', response.data.village_name);
       return response.data;
     } catch (error) {
-      console.error('❌ Error syncing create survey:', error);
+      console.error('❌ Error syncing create survey:', error.response?.status, error.message);
+      
+      // If 409 Conflict, the survey was already created and updated by the backend
+      if (error.response?.status === 409) {
+        console.log('⚠️ Survey already exists on server (conflict), but backend will handle it');
+        // The conflict might be resolved by backend's upsert logic, mark as synced
+        const surveys = await indexedDBService.getAllSurveys();
+        const localSurvey = surveys.find(s => s.local_id === localId);
+        if (localSurvey) {
+          await indexedDBService.updateSurvey(localSurvey.id, {
+            synced: true,
+            synced_at: new Date().toISOString(),
+          }, false); // false = don't add to sync queue!
+        }
+        return;
+      }
+      
       if (error.response) {
         console.error('Server response:', error.response.data);
       }
@@ -319,14 +346,14 @@ class SyncService {
       // Call API directly (not through surveyService to avoid duplicate IndexedDB writes)
       const response = await api.put(`/api/surveys/${surveyId}`, cleanData);
       
-      // Update the synced status in IndexedDB
+      // Update the synced status in IndexedDB (WITHOUT adding to sync queue)
       const surveys = await indexedDBService.getAllSurveys();
       const localSurvey = surveys.find(s => s.survey_id === surveyId);
       if (localSurvey) {
         await indexedDBService.updateSurvey(localSurvey.id, {
           synced: true,
           synced_at: new Date().toISOString(),
-        });
+        }, false); // false = don't add to sync queue!
       }
       
       console.log('Survey updated on server:', surveyId);
@@ -389,20 +416,20 @@ class SyncService {
         );
 
         if (existingSurvey) {
-          // Update existing survey
+          // Update existing survey (WITHOUT adding to sync queue)
           await indexedDBService.updateSurvey(existingSurvey.id, {
             ...survey,
             synced: true,
             synced_at: new Date().toISOString(),
-          });
+          }, false); // false = don't add to sync queue!
         } else {
-          // Add new survey
+          // Add new survey (WITHOUT adding to sync queue)
           await indexedDBService.saveSurvey({
             ...survey,
             synced: true,
             synced_at: new Date().toISOString(),
             local_id: `server_${survey.survey_id}`,
-          });
+          }, false); // false = don't add to sync queue!
         }
       }
 

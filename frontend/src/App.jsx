@@ -99,6 +99,14 @@ function AppRoutes() {
             }
           />
           <Route
+            path="/surveys/:surveyId/edit"
+            element={
+              <ProtectedRoute>
+                <SurveyDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/surveys/:surveyId"
             element={
               <ProtectedRoute>

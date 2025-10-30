@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiSave, FiClock, FiCheckCircle } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useAuth } from '../context/AuthContext';
+import { useSync } from '../context/SyncContext';
 import { SURVEY_MODULES } from '../utils/constants';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -13,11 +14,13 @@ import toast from 'react-hot-toast';
 const SurveyDetail = () => {
   const { surveyId } = useParams();
   const navigate = useNavigate();
-  const { panchayat } = useAuth();
+  const { panchayat, user } = useAuth();
+  const { isOnline } = useSync();
   const { survey, loading } = useSurvey(surveyId);
   const [activeModule, setActiveModule] = useState('basic_info');
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (survey) {
@@ -64,7 +67,12 @@ const SurveyDetail = () => {
       };
 
       await surveyService.updateSurvey(surveyId, updatedData);
-      toast.success('Survey saved successfully!');
+      
+      if (isOnline) {
+        toast.success('Survey saved and synced successfully!');
+      } else {
+        toast.success('Survey saved locally. Will sync when online.');
+      }
     } catch (error) {
       if (error.response?.status === 409) {
         toast.error('Conflict detected! Please resolve conflicts before saving.');
@@ -73,6 +81,38 @@ const SurveyDetail = () => {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    // Confirmation dialog
+    const confirmMessage = isOnline 
+      ? 'Are you sure you want to delete this survey? This action cannot be undone.'
+      : 'You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?';
+    
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      await surveyService.deleteSurvey(surveyId);
+      
+      if (isOnline) {
+        toast.success('Survey deleted successfully!');
+      } else {
+        toast.success('Survey deleted locally. Will sync deletion when online.');
+      }
+      
+      // Navigate back to surveys list after short delay
+      setTimeout(() => {
+        navigate('/surveys');
+      }, 500);
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error('Failed to delete survey. Please try again.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -99,24 +139,46 @@ const SurveyDetail = () => {
           </button>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h1 className="text-4xl font-bold text-base-content mb-2">
-                {formData.village_name || 'Untitled Survey'}
-              </h1>
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-base-content">
+                  {formData.village_name || 'Untitled Survey'}
+                </h1>
+                {!isOnline && (
+                  <span className="badge badge-warning gap-2">
+                    <span className="w-2 h-2 bg-warning rounded-full animate-pulse"></span>
+                    Offline
+                  </span>
+                )}
+              </div>
               <p className="text-base-content/60">
                 {panchayat?.name} • Created {new Date(survey.created_at).toLocaleDateString()}
               </p>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={handleSave}
-              className={`btn btn-primary ${saving ? 'loading' : ''}`}
-              disabled={saving}
-            >
-              {!saving && <FiSave className="mr-2" />}
-              {saving ? 'Saving...' : 'Save Survey'}
-            </motion.button>
+            <div className="flex gap-3">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleDelete}
+                className={`btn btn-error btn-outline ${deleting ? 'loading' : ''}`}
+                disabled={deleting || saving}
+                title={isOnline ? 'Delete survey' : 'Delete locally (will sync when online)'}
+              >
+                {!deleting && <FiTrash2 className="mr-2" />}
+                {deleting ? 'Deleting...' : 'Delete'}
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleSave}
+                className={`btn btn-primary ${saving ? 'loading' : ''}`}
+                disabled={saving || deleting}
+                title={isOnline ? 'Save and sync' : 'Save locally (will sync when online)'}
+              >
+                {!saving && <FiSave className="mr-2" />}
+                {saving ? 'Saving...' : 'Save Survey'}
+              </motion.button>
+            </div>
           </div>
         </motion.div>
 
@@ -128,7 +190,19 @@ const SurveyDetail = () => {
         >
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
-              <span className="font-semibold">Overall Progress</span>
+              <div className="flex items-center gap-3">
+                <span className="font-semibold">Overall Progress</span>
+                {!isOnline && (
+                  <span className="badge badge-sm badge-warning gap-1">
+                    Offline Mode
+                  </span>
+                )}
+                {survey.synced === false && (
+                  <span className="badge badge-sm badge-info gap-1">
+                    Unsynced Changes
+                  </span>
+                )}
+              </div>
               <span className="text-2xl font-bold text-primary">{completionPercentage}%</span>
             </div>
             <progress 
