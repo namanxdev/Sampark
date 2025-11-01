@@ -1,0 +1,175 @@
+{
+  "title": "Surveys",
+  "new_survey": "New Survey",
+  "all_surveys": "All Surveys",
+  "my_surveys": "My Surveys",
+  
+  "fields": {
+    "village_name": "Village Name",
+    "village_name_placeholder": "Enter village name",
+    "panchayat": "Panchayat",
+    "panchayat_id": "Panchayat ID",
+    "created_by": "Created By",
+    "created_at": "Created On",
+    "updated_at": "Updated On",
+    "completion": "Completion",
+    "progress": "Progress",
+    "status": "Status"
+  },
+  
+  "status": {
+    "all": "All",
+    "complete": "Complete",
+    "in_progress": "In Progress",
+    "pending_sync": "Pending Sync",
+    "synced": "Synced"
+  },
+  
+  "modules": {
+    "basic_info": "Basic Information",
+    "infrastructure": "Infrastructure",
+    "sanitation": "Sanitation",
+    "connectivity": "Connectivity",
+    "land_forest": "Land & Forest",
+    "electricity": "Electricity",
+    "waste_management": "Waste Management"
+  },
+  
+  "actions": {
+    "view_survey": "View Survey",
+    "edit_survey": "Edit Survey",
+    "delete_survey": "Delete Survey",
+    "duplicate_survey": "Duplicate Survey",
+    "export_survey": "Export Survey"
+  },
+  
+  "messages": {
+    "no_surveys": "No surveys found",
+    "create_first": "Create your first survey to get started",
+    "loading_surveys": "Loading surveys...",
+    "survey_created": "Survey created successfully",
+    "survey_updated": "Survey updated successfully",
+    "survey_deleted": "Survey deleted successfully",
+    "delete_confirm": "Are you sure you want to delete '{{name}}'? This action cannot be undone.",
+    "delete_offline": "Survey will be deleted when you're back online",
+    "sync_required": "This survey has unsaved changes. Please sync when online."
+  },
+  
+  "stats": {
+    "total": "Total Surveys",
+    "completed": "Completed",
+    "in_progress": "In Progress",
+    "pending_sync": "Pending Sync"
+  },
+  
+  "search_placeholder": "Search by village name...",
+  "filter_by": "Filter by",
+  "sort_by": "Sort by",
+  "newest_first": "Newest First",
+  "oldest_first": "Oldest First",
+  "village_az": "Village A-Z",
+  "village_za": "Village Z-A",
+  "no_results": "No surveys match your search",
+  "showing": "Showing {{count}} surveys",
+  
+  "detail": {
+    "back_to_surveys": "Back to Surveys",
+    "untitled_survey": "Untitled Survey",
+    "created": "Created",
+    "offline": "Offline",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "save_survey": "Save Survey",
+    "saving": "Saving...",
+    "overall_progress": "Overall Progress",
+    "offline_mode": "Offline Mode",
+    "unsynced_changes": "Unsynced Changes",
+    "last_updated": "Last updated",
+    "survey_modules": "Survey Modules",
+    "save_sync": "Save and sync",
+    "save_local": "Save locally (will sync when online)",
+    "delete_confirm": "Are you sure you want to delete this survey? This action cannot be undone.",
+    "delete_offline_confirm": "You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?",
+    "saved_synced": "Survey saved and synced successfully!",
+    "saved_local": "Survey saved locally. Will sync when online.",
+    "conflict_error": "Conflict detected! Please resolve conflicts before saving.",
+    "save_error": "Failed to save survey",
+    "deleted_success": "Survey deleted successfully!",
+    "deleted_local": "Survey deleted locally. Will sync deletion when online.",
+    "delete_error": "Failed to delete survey. Please try again.",
+    "not_found": "Survey not found",
+    "select": "Select {{label}}"
+  },
+  
+  "form": {
+    "required": "*",
+    "select_placeholder": "Select {{label}}"
+  },
+  
+  "module_fields": {
+    "population": "Population",
+    "population_placeholder": "Enter total population",
+    "households": "Number of Households",
+    "households_placeholder": "Enter number of households",
+    "literacy_rate": "Literacy Rate (%)",
+    "literacy_rate_placeholder": "Enter literacy rate",
+    "primary_occupation": "Primary Occupation",
+    "roads": "Road Conditions",
+    "schools": "Number of Schools",
+    "schools_placeholder": "Enter number of schools",
+    "hospitals": "Number of Health Centers",
+    "hospitals_placeholder": "Enter number of health centers",
+    "community_centers": "Community Centers",
+    "community_centers_placeholder": "Enter number of community centers",
+    "toilets": "Household Toilets Coverage (%)",
+    "toilets_placeholder": "Enter percentage",
+    "drainage": "Drainage System",
+    "water_supply": "Water Supply Status",
+    "mobile_network": "Mobile Network Coverage",
+    "internet": "Internet Availability",
+    "transport": "Public Transport",
+    "agricultural_land": "Agricultural Land (acres)",
+    "agricultural_land_placeholder": "Enter area in acres",
+    "forest_area": "Forest Area (acres)",
+    "forest_area_placeholder": "Enter area in acres",
+    "irrigation": "Irrigation Facilities",
+    "coverage": "Electricity Coverage (%)",
+    "coverage_placeholder": "Enter percentage",
+    "supply_hours": "Average Supply Hours/Day",
+    "supply_hours_placeholder": "Enter hours",
+    "street_lights": "Street Light Coverage",
+    "collection_system": "Waste Collection System",
+    "segregation": "Waste Segregation Practice",
+    "disposal_method": "Disposal Method"
+  },
+  
+  "options": {
+    "agriculture": "Agriculture",
+    "business": "Business",
+    "service": "Service",
+    "labor": "Labor",
+    "other": "Other",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "none": "None",
+    "24x7": "24x7",
+    "scheduled": "Scheduled",
+    "limited": "Limited",
+    "insufficient": "Insufficient",
+    "broadband": "Broadband",
+    "4g": "4G",
+    "3g": "3G",
+    "2g": "2G",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "biweekly": "Bi-weekly",
+    "yes": "Yes",
+    "no": "No",
+    "partial": "Partial",
+    "composting": "Composting",
+    "landfill": "Landfill",
+    "burning": "Burning"
+  }
+}

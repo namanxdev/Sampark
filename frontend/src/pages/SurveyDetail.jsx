@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useAuth } from '../context/AuthContext';
@@ -14,6 +15,7 @@ import toast from 'react-hot-toast';
 const SurveyDetail = () => {
   const { surveyId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation(['survey', 'common']);
   const { panchayat, user } = useAuth();
   const { isOnline } = useSync();
   const { survey, loading } = useSurvey(surveyId);
@@ -69,15 +71,15 @@ const SurveyDetail = () => {
       await surveyService.updateSurvey(surveyId, updatedData);
       
       if (isOnline) {
-        toast.success('Survey saved and synced successfully!');
+        toast.success(t('survey:detail.saved_synced'));
       } else {
-        toast.success('Survey saved locally. Will sync when online.');
+        toast.success(t('survey:detail.saved_local'));
       }
     } catch (error) {
       if (error.response?.status === 409) {
-        toast.error('Conflict detected! Please resolve conflicts before saving.');
+        toast.error(t('survey:detail.conflict_error'));
       } else {
-        toast.error('Failed to save survey');
+        toast.error(t('survey:detail.save_error'));
       }
     } finally {
       setSaving(false);
@@ -87,8 +89,8 @@ const SurveyDetail = () => {
   const handleDelete = async () => {
     // Confirmation dialog
     const confirmMessage = isOnline 
-      ? 'Are you sure you want to delete this survey? This action cannot be undone.'
-      : 'You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?';
+      ? t('survey:detail.delete_confirm')
+      : t('survey:detail.delete_offline_confirm');
     
     if (!window.confirm(confirmMessage)) {
       return;
@@ -99,9 +101,9 @@ const SurveyDetail = () => {
       await surveyService.deleteSurvey(surveyId);
       
       if (isOnline) {
-        toast.success('Survey deleted successfully!');
+        toast.success(t('survey:detail.deleted_success'));
       } else {
-        toast.success('Survey deleted locally. Will sync deletion when online.');
+        toast.success(t('survey:detail.deleted_local'));
       }
       
       // Navigate back to surveys list after short delay
@@ -110,14 +112,14 @@ const SurveyDetail = () => {
       }, 500);
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error('Failed to delete survey. Please try again.');
+      toast.error(t('survey:detail.delete_error'));
     } finally {
       setDeleting(false);
     }
   };
 
   if (loading) return <LoadingSpinner fullScreen />;
-  if (!survey) return <div>Survey not found</div>;
+  if (!survey) return <div>{t('survey:detail.not_found')}</div>;
 
   const completionPercentage = calculateCompletion();
 
@@ -135,24 +137,24 @@ const SurveyDetail = () => {
             className="btn btn-ghost mb-4"
           >
             <FiArrowLeft className="mr-2" />
-            Back to Surveys
+            {t('survey:detail.back_to_surveys')}
           </button>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold text-base-content">
-                  {formData.village_name || 'Untitled Survey'}
+                  {formData.village_name || t('survey:detail.untitled_survey')}
                 </h1>
                 {!isOnline && (
                   <span className="badge badge-warning gap-2">
                     <span className="w-2 h-2 bg-warning rounded-full animate-pulse"></span>
-                    Offline
+                    {t('survey:detail.offline')}
                   </span>
                 )}
               </div>
               <p className="text-base-content/60">
-                {panchayat?.name} • Created {new Date(survey.created_at).toLocaleDateString()}
+                {panchayat?.name} • {t('survey:detail.created')} {new Date(survey.created_at).toLocaleDateString()}
               </p>
             </div>
             <div className="flex gap-3">
@@ -162,10 +164,10 @@ const SurveyDetail = () => {
                 onClick={handleDelete}
                 className={`btn btn-error btn-outline ${deleting ? 'loading' : ''}`}
                 disabled={deleting || saving}
-                title={isOnline ? 'Delete survey' : 'Delete locally (will sync when online)'}
+                title={isOnline ? t('survey:actions.delete_survey') : t('survey:detail.save_local')}
               >
                 {!deleting && <FiTrash2 className="mr-2" />}
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('survey:detail.deleting') : t('survey:detail.delete')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -173,10 +175,10 @@ const SurveyDetail = () => {
                 onClick={handleSave}
                 className={`btn btn-primary ${saving ? 'loading' : ''}`}
                 disabled={saving || deleting}
-                title={isOnline ? 'Save and sync' : 'Save locally (will sync when online)'}
+                title={isOnline ? t('survey:detail.save_sync') : t('survey:detail.save_local')}
               >
                 {!saving && <FiSave className="mr-2" />}
-                {saving ? 'Saving...' : 'Save Survey'}
+                {saving ? t('survey:detail.saving') : t('survey:detail.save_survey')}
               </motion.button>
             </div>
           </div>
@@ -191,15 +193,15 @@ const SurveyDetail = () => {
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="font-semibold">Overall Progress</span>
+                <span className="font-semibold">{t('survey:detail.overall_progress')}</span>
                 {!isOnline && (
                   <span className="badge badge-sm badge-warning gap-1">
-                    Offline Mode
+                    {t('survey:detail.offline_mode')}
                   </span>
                 )}
                 {survey.synced === false && (
                   <span className="badge badge-sm badge-info gap-1">
-                    Unsynced Changes
+                    {t('survey:detail.unsynced_changes')}
                   </span>
                 )}
               </div>
@@ -213,12 +215,12 @@ const SurveyDetail = () => {
             <div className="flex items-center justify-between mt-3 text-sm">
               <div className="flex items-center text-base-content/60">
                 <FiClock className="mr-1" />
-                Last updated: {new Date(survey.updated_at).toLocaleString()}
+                {t('survey:detail.last_updated')}: {new Date(survey.updated_at).toLocaleString()}
               </div>
               {completionPercentage === 100 && (
                 <div className="flex items-center text-success font-semibold">
                   <FiCheckCircle className="mr-1" />
-                  Complete
+                  {t('common:status.complete')}
                 </div>
               )}
             </div>
@@ -234,7 +236,7 @@ const SurveyDetail = () => {
             transition={{ delay: 0.2 }}
           >
             <Card>
-              <h3 className="text-lg font-bold mb-4">Survey Modules</h3>
+              <h3 className="text-lg font-bold mb-4">{t('survey:detail.survey_modules')}</h3>
               <div className="space-y-2">
                 {SURVEY_MODULES.map((module) => {
                   const isComplete = formData[module.id] && Object.keys(formData[module.id]).length > 0;
@@ -252,7 +254,7 @@ const SurveyDetail = () => {
                       `}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{module.name}</span>
+                        <span className="text-sm font-medium">{t(`survey:modules.${module.id}`)}</span>
                         {isComplete && (
                           <FiCheckCircle className={activeModule === module.id ? 'text-white' : 'text-success'} />
                         )}
@@ -273,7 +275,7 @@ const SurveyDetail = () => {
           >
             <Card>
               <h2 className="text-2xl font-bold mb-6">
-                {SURVEY_MODULES.find(m => m.id === activeModule)?.name}
+                {t(`survey:modules.${activeModule}`)}
               </h2>
               <ModuleForm
                 moduleId={activeModule}
@@ -290,6 +292,8 @@ const SurveyDetail = () => {
 
 // Dynamic form component for each module
 const ModuleForm = ({ moduleId, data, onChange }) => {
+  const { t } = useTranslation(['survey', 'common']);
+  
   const handleInputChange = (field, value) => {
     // For number inputs, validate min/max constraints
     if (field.type === 'number' && value !== '') {
@@ -297,7 +301,7 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
       
       // Check if value exceeds maximum
       if (field.max !== undefined && numValue > field.max) {
-        toast.error(`Maximum value for ${field.label} is ${field.max}`, {
+        toast.error(t('survey:validation.max_value', { label: field.label, max: field.max }), {
           position: 'top-center'
         });
         return; // Don't update the value
@@ -305,7 +309,7 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
       
       // Check if value is below minimum
       if (field.min !== undefined && numValue < field.min) {
-        toast.error(`Minimum value for ${field.label} is ${field.min}`, {
+        toast.error(t('survey:validation.min_value', { label: field.label, min: field.min }), {
           position: 'top-center'
         });
         return; // Don't update the value
@@ -326,15 +330,15 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
       {fields.map((field) => (
         <div key={field.name} className="form-control">
           <label className="label">
-            <span className="label-text font-medium">{field.label}</span>
-            {field.required && <span className="text-error">*</span>}
+            <span className="label-text font-medium">{t(`survey:module_fields.${field.name}`)}</span>
+            {field.required && <span className="text-error">{t('survey:form.required')}</span>}
           </label>
           {field.type === 'textarea' ? (
             <textarea
               className="textarea textarea-bordered h-24"
               value={data[field.name] || ''}
               onChange={(e) => handleInputChange(field, e.target.value)}
-              placeholder={field.placeholder}
+              placeholder={field.placeholder || t(`survey:module_fields.${field.name}_placeholder`)}
             />
           ) : field.type === 'select' ? (
             <select
@@ -342,9 +346,9 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
               value={data[field.name] || ''}
               onChange={(e) => handleInputChange(field, e.target.value)}
             >
-              <option value="">Select {field.label}</option>
+              <option value="">{t('survey:detail.select', { label: t(`survey:module_fields.${field.name}`) })}</option>
               {field.options?.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
+                <option key={opt} value={opt}>{t(`survey:options.${opt.toLowerCase().replace(/\s+/g, '_').replace(/\//g, '')}`)}</option>
               ))}
             </select>
           ) : (
@@ -353,7 +357,7 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
               className="input input-bordered"
               value={data[field.name] || ''}
               onChange={(e) => handleInputChange(field, e.target.value)}
-              placeholder={field.placeholder}
+              placeholder={field.placeholder || t(`survey:module_fields.${field.name}_placeholder`)}
               min={field.min}
               max={field.max}
               step={field.step}
@@ -386,9 +390,9 @@ const getFieldsForModule = (moduleId) => {
       { name: 'water_supply', label: 'Water Supply Status', type: 'select', options: ['24x7', 'Scheduled', 'Limited', 'Insufficient'], required: true },
     ],
     connectivity: [
-      { name: 'mobile_network', label: 'Mobile Network Coverage', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
-      { name: 'internet', label: 'Internet Availability', type: 'select', options: ['Broadband', '4G', '3G', '2G', 'None'], required: true },
-      { name: 'transport', label: 'Public Transport', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
+      { name: 'mobile_network', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
+      { name: 'internet', type: 'select', options: ['Broadband', '4G', '3G', '2G', 'None'], required: true },
+      { name: 'transport', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
     ],
     land_forest: [
       { name: 'agricultural_land', label: 'Agricultural Land (acres)', type: 'number', placeholder: 'Enter area in acres', required: true, min: 0, max: 50000, step: 1 },
@@ -401,9 +405,9 @@ const getFieldsForModule = (moduleId) => {
       { name: 'street_lights', label: 'Street Light Coverage', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: false },
     ],
     waste_management: [
-      { name: 'collection_system', label: 'Waste Collection System', type: 'select', options: ['Daily', 'Weekly', 'Bi-weekly', 'None'], required: true },
-      { name: 'segregation', label: 'Waste Segregation Practice', type: 'select', options: ['Yes', 'No', 'Partial'], required: true },
-      { name: 'disposal_method', label: 'Disposal Method', type: 'select', options: ['Composting', 'Landfill', 'Burning', 'Other'], required: true },
+      { name: 'collection_system', type: 'select', options: ['Daily', 'Weekly', 'Bi-weekly', 'None'], required: true },
+      { name: 'segregation', type: 'select', options: ['Yes', 'No', 'Partial'], required: true },
+      { name: 'disposal_method', type: 'select', options: ['Composting', 'Landfill', 'Burning', 'Other'], required: true },
     ],
   };
 

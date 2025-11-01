@@ -695,13 +695,597 @@ Open DevTools → Application → IndexedDB → SamparkDB → pendingSync → Cl
 
 ---
 
-## 🤝 Contributing
+## 🌍 Multilingual Support (i18n)
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+Sampark can be extended to support multiple languages for rural India's diverse linguistic landscape. Here's how to implement internationalization:
+
+### **Recommended Approach: react-i18next**
+
+#### **1. Install Dependencies**
+
+```bash
+cd frontend
+npm install react-i18next i18next i18next-browser-languagedetector
+```
+
+#### **2. Project Structure**
+
+```
+frontend/
+└── src/
+    ├── i18n/
+    │   ├── config.js           # i18n configuration
+    │   └── locales/
+    │       ├── en/
+    │       │   ├── common.json      # Common UI text
+    │       │   ├── auth.json        # Login/auth
+    │       │   ├── survey.json      # Survey forms
+    │       │   └── modules.json     # Module-specific
+    │       ├── hi/              # Hindi
+    │       │   ├── common.json
+    │       │   ├── auth.json
+    │       │   ├── survey.json
+    │       │   └── modules.json
+    │       ├── pa/              # Punjabi
+    │       ├── bn/              # Bengali
+    │       ├── ta/              # Tamil
+    │       ├── te/              # Telugu
+    │       └── mr/              # Marathi
+    └── main.jsx
+```
+
+#### **3. Configure i18n**
+
+Create `frontend/src/i18n/config.js`:
+
+```javascript
+import i18n from 'i18next';
+import { initReactI18next } from 'react-i18next';
+import LanguageDetector from 'i18next-browser-languagedetector';
+
+// Import translation files
+import enCommon from './locales/en/common.json';
+import enAuth from './locales/en/auth.json';
+import enSurvey from './locales/en/survey.json';
+import enModules from './locales/en/modules.json';
+
+import hiCommon from './locales/hi/common.json';
+import hiAuth from './locales/hi/auth.json';
+import hiSurvey from './locales/hi/survey.json';
+import hiModules from './locales/hi/modules.json';
+
+const resources = {
+  en: {
+    common: enCommon,
+    auth: enAuth,
+    survey: enSurvey,
+    modules: enModules,
+  },
+  hi: {
+    common: hiCommon,
+    auth: hiAuth,
+    survey: hiSurvey,
+    modules: hiModules,
+  },
+};
+
+i18n
+  .use(LanguageDetector) // Detect user language
+  .use(initReactI18next)  // Pass i18n to react-i18next
+  .init({
+    resources,
+    fallbackLng: 'en',
+    defaultNS: 'common',
+    
+    detection: {
+      // Order of language detection
+      order: ['localStorage', 'navigator', 'htmlTag'],
+      caches: ['localStorage'], // Save preference
+    },
+    
+    interpolation: {
+      escapeValue: false, // React already escapes
+    },
+    
+    react: {
+      useSuspense: false,
+    },
+  });
+
+export default i18n;
+```
+
+#### **4. Initialize in main.jsx**
+
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App.jsx';
+import './index.css';
+import './i18n/config'; // Import i18n config
+
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);
+```
+
+#### **5. Create Translation Files**
+
+**`frontend/src/i18n/locales/en/common.json`:**
+```json
+{
+  "app_name": "Sampark",
+  "welcome": "Welcome",
+  "logout": "Logout",
+  "settings": "Settings",
+  "dashboard": "Dashboard",
+  "surveys": "Surveys",
+  "new_survey": "New Survey",
+  "search": "Search",
+  "filter": "Filter",
+  "save": "Save",
+  "cancel": "Cancel",
+  "delete": "Delete",
+  "edit": "Edit",
+  "view": "View",
+  "loading": "Loading...",
+  "online": "Online",
+  "offline": "Offline",
+  "sync": "Sync",
+  "syncing": "Syncing...",
+  "synced": "Synced",
+  "pending": "Pending"
+}
+```
+
+**`frontend/src/i18n/locales/hi/common.json`:**
+```json
+{
+  "app_name": "संपर्क",
+  "welcome": "स्वागत है",
+  "logout": "लॉग आउट",
+  "settings": "सेटिंग्स",
+  "dashboard": "डैशबोर्ड",
+  "surveys": "सर्वेक्षण",
+  "new_survey": "नया सर्वेक्षण",
+  "search": "खोजें",
+  "filter": "फ़िल्टर",
+  "save": "सहेजें",
+  "cancel": "रद्द करें",
+  "delete": "हटाएं",
+  "edit": "संपादित करें",
+  "view": "देखें",
+  "loading": "लोड हो रहा है...",
+  "online": "ऑनलाइन",
+  "offline": "ऑफ़लाइन",
+  "sync": "सिंक करें",
+  "syncing": "सिंक हो रहा है...",
+  "synced": "सिंक किया गया",
+  "pending": "लंबित"
+}
+```
+
+**`frontend/src/i18n/locales/en/survey.json`:**
+```json
+{
+  "village_name": "Village Name",
+  "panchayat": "Panchayat",
+  "completion": "Completion",
+  "status": "Status",
+  "created": "Created",
+  "updated": "Updated",
+  "progress": "Progress",
+  "complete": "Complete",
+  "in_progress": "In Progress",
+  "modules": {
+    "basic_info": "Basic Information",
+    "infrastructure": "Infrastructure",
+    "sanitation": "Sanitation",
+    "connectivity": "Connectivity",
+    "land_forest": "Land & Forest",
+    "electricity": "Electricity",
+    "waste_management": "Waste Management"
+  }
+}
+```
+
+**`frontend/src/i18n/locales/hi/survey.json`:**
+```json
+{
+  "village_name": "गांव का नाम",
+  "panchayat": "पंचायत",
+  "completion": "पूर्णता",
+  "status": "स्थिति",
+  "created": "बनाया गया",
+  "updated": "अपडेट किया गया",
+  "progress": "प्रगति",
+  "complete": "पूर्ण",
+  "in_progress": "प्रगति में",
+  "modules": {
+    "basic_info": "बुनियादी जानकारी",
+    "infrastructure": "बुनियादी ढांचा",
+    "sanitation": "स्वच्छता",
+    "connectivity": "कनेक्टिविटी",
+    "land_forest": "भूमि और वन",
+    "electricity": "बिजली",
+    "waste_management": "अपशिष्ट प्रबंधन"
+  }
+}
+```
+
+**`frontend/src/i18n/locales/en/modules.json`:**
+```json
+{
+  "basic_info": {
+    "title": "Basic Information",
+    "total_households": "Total Households",
+    "total_population": "Total Population",
+    "male_population": "Male Population",
+    "female_population": "Female Population",
+    "sc_population": "SC Population",
+    "st_population": "ST Population"
+  },
+  "infrastructure": {
+    "title": "Infrastructure",
+    "paved_roads": "Paved Roads (km)",
+    "unpaved_roads": "Unpaved Roads (km)",
+    "public_buildings": "Public Buildings",
+    "schools": "Schools",
+    "health_centers": "Health Centers"
+  }
+}
+```
+
+**`frontend/src/i18n/locales/hi/modules.json`:**
+```json
+{
+  "basic_info": {
+    "title": "बुनियादी जानकारी",
+    "total_households": "कुल परिवार",
+    "total_population": "कुल जनसंख्या",
+    "male_population": "पुरुष जनसंख्या",
+    "female_population": "महिला जनसंख्या",
+    "sc_population": "अनुसूचित जाति जनसंख्या",
+    "st_population": "अनुसूचित जनजाति जनसंख्या"
+  },
+  "infrastructure": {
+    "title": "बुनियादी ढांचा",
+    "paved_roads": "पक्की सड़कें (किमी)",
+    "unpaved_roads": "कच्ची सड़कें (किमी)",
+    "public_buildings": "सार्वजनिक भवन",
+    "schools": "विद्यालय",
+    "health_centers": "स्वास्थ्य केंद्र"
+  }
+}
+```
+
+#### **6. Use in Components**
+
+**Basic Usage:**
+
+```jsx
+import { useTranslation } from 'react-i18next';
+
+function Navbar() {
+  const { t } = useTranslation('common');
+  
+  return (
+    <nav>
+      <h1>{t('app_name')}</h1>
+      <button>{t('logout')}</button>
+    </nav>
+  );
+}
+```
+
+**With Namespace:**
+
+```jsx
+import { useTranslation } from 'react-i18next';
+
+function SurveyCard({ survey }) {
+  const { t } = useTranslation('survey');
+  
+  return (
+    <div>
+      <h3>{t('village_name')}: {survey.village_name}</h3>
+      <p>{t('progress')}: {survey.completion_percentage}%</p>
+      <span>{t(survey.is_complete ? 'complete' : 'in_progress')}</span>
+    </div>
+  );
+}
+```
+
+**With Nested Keys:**
+
+```jsx
+import { useTranslation } from 'react-i18next';
+
+function ModuleList() {
+  const { t } = useTranslation('survey');
+  
+  return (
+    <ul>
+      <li>{t('modules.basic_info')}</li>
+      <li>{t('modules.infrastructure')}</li>
+      <li>{t('modules.sanitation')}</li>
+    </ul>
+  );
+}
+```
+
+**Dynamic Form Fields:**
+
+```jsx
+import { useTranslation } from 'react-i18next';
+
+function BasicInfoModule({ data, onChange }) {
+  const { t } = useTranslation('modules');
+  
+  return (
+    <div>
+      <h2>{t('basic_info.title')}</h2>
+      
+      <input
+        type="number"
+        placeholder={t('basic_info.total_households')}
+        value={data.total_households || ''}
+        onChange={(e) => onChange('total_households', e.target.value)}
+      />
+      
+      <input
+        type="number"
+        placeholder={t('basic_info.total_population')}
+        value={data.total_population || ''}
+        onChange={(e) => onChange('total_population', e.target.value)}
+      />
+    </div>
+  );
+}
+```
+
+#### **7. Language Switcher Component**
+
+Create `frontend/src/components/LanguageSwitcher.jsx`:
+
+```jsx
+import { useTranslation } from 'react-i18next';
+
+const languages = [
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+  { code: 'pa', name: 'ਪੰਜਾਬੀ', flag: '🇮🇳' },
+  { code: 'bn', name: 'বাংলা', flag: '🇮🇳' },
+  { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' },
+  { code: 'te', name: 'తెలుగు', flag: '🇮🇳' },
+  { code: 'mr', name: 'मराठी', flag: '🇮🇳' },
+];
+
+function LanguageSwitcher() {
+  const { i18n } = useTranslation();
+  
+  const changeLanguage = (langCode) => {
+    i18n.changeLanguage(langCode);
+    localStorage.setItem('language', langCode);
+  };
+  
+  return (
+    <div className="dropdown dropdown-end">
+      <label tabIndex={0} className="btn btn-ghost btn-circle">
+        <span className="text-xl">
+          {languages.find(l => l.code === i18n.language)?.flag || '🌐'}
+        </span>
+      </label>
+      
+      <ul 
+        tabIndex={0} 
+        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-4"
+      >
+        {languages.map((lang) => (
+          <li key={lang.code}>
+            <button
+              onClick={() => changeLanguage(lang.code)}
+              className={i18n.language === lang.code ? 'active' : ''}
+            >
+              <span className="text-xl">{lang.flag}</span>
+              <span>{lang.name}</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export default LanguageSwitcher;
+```
+
+Add to Navbar:
+
+```jsx
+import LanguageSwitcher from './LanguageSwitcher';
+
+function Navbar() {
+  return (
+    <nav>
+      {/* Other navbar content */}
+      <LanguageSwitcher />
+    </nav>
+  );
+}
+```
+
+#### **8. Backend Support (Optional)**
+
+Store user's language preference in database:
+
+**Update User Model:**
+
+```python
+# Backend/app/models/models.py
+class User(Base):
+    # ... existing fields
+    preferred_language = Column(String(10), default='en')
+```
+
+**Migration:**
+
+```bash
+cd Backend
+alembic revision -m "add_user_language_preference"
+# Edit the migration file
+alembic upgrade head
+```
+
+**API Endpoint:**
+
+```python
+# Backend/app/routers/auth.py
+@router.put("/me/language")
+async def update_language(
+    language: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    current_user.preferred_language = language
+    db.commit()
+    return {"message": "Language updated", "language": language}
+```
+
+**Frontend Integration:**
+
+```javascript
+// Load user's preferred language on login
+const loadUserLanguage = async () => {
+  try {
+    const response = await api.get('/api/auth/me');
+    const userLang = response.data.preferred_language;
+    i18n.changeLanguage(userLang);
+  } catch (error) {
+    console.error('Failed to load language preference');
+  }
+};
+
+// Save language preference
+const saveLanguagePreference = async (langCode) => {
+  try {
+    await api.put('/api/auth/me/language', { language: langCode });
+    i18n.changeLanguage(langCode);
+  } catch (error) {
+    console.error('Failed to save language preference');
+  }
+};
+```
+
+#### **9. Offline Support**
+
+Store translations in IndexedDB for offline access:
+
+```javascript
+// Add to indexedDBService.js
+const STORES = {
+  // ... existing stores
+  TRANSLATIONS: 'translations',
+};
+
+// Store translations
+async saveTranslations(language, translations) {
+  const transaction = this.getTransaction(STORES.TRANSLATIONS, 'readwrite');
+  const store = transaction.objectStore(STORES.TRANSLATIONS);
+  
+  return new Promise((resolve, reject) => {
+    const request = store.put({ language, translations, updated_at: new Date() });
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error);
+  });
+}
+
+// Load translations
+async getTranslations(language) {
+  const transaction = this.getTransaction(STORES.TRANSLATIONS, 'readonly');
+  const store = transaction.objectStore(STORES.TRANSLATIONS);
+  
+  return new Promise((resolve, reject) => {
+    const request = store.get(language);
+    request.onsuccess = () => resolve(request.result?.translations);
+    request.onerror = () => reject(request.error);
+  });
+}
+```
+
+#### **10. RTL Support (for Urdu, Arabic)**
+
+Add RTL support in `i18n/config.js`:
+
+```javascript
+// Detect RTL languages
+const rtlLanguages = ['ur', 'ar'];
+
+i18n.on('languageChanged', (lng) => {
+  const dir = rtlLanguages.includes(lng) ? 'rtl' : 'ltr';
+  document.documentElement.dir = dir;
+  document.documentElement.lang = lng;
+});
+```
+
+Add RTL CSS:
+
+```css
+/* index.css */
+[dir="rtl"] {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] .btn {
+  /* Mirror button styles */
+}
+```
+
+### **Translation Best Practices**
+
+1. **Keep keys organized** - Use nested namespaces
+2. **Use interpolation** - `"welcome_user": "Welcome, {{name}}!"`
+3. **Pluralization** - `"items_count": "{{count}} item", "items_count_plural": "{{count}} items"`
+4. **Context-aware** - `"save": "Save", "save_survey": "Save Survey"`
+5. **Professional translation** - Use native speakers for accuracy
+6. **Test thoroughly** - Check UI with long text (German) and short text (Hindi)
+
+### **Supported Languages Priority**
+
+For rural India, prioritize:
+
+1. **Hindi (hi)** - Official language, widely understood
+2. **English (en)** - Official, administrative use
+3. **Regional languages:**
+   - **Punjabi (pa)** - Punjab
+   - **Bengali (bn)** - West Bengal, Assam
+   - **Tamil (ta)** - Tamil Nadu
+   - **Telugu (te)** - Andhra Pradesh, Telangana
+   - **Marathi (mr)** - Maharashtra
+   - **Gujarati (gu)** - Gujarat
+   - **Kannada (kn)** - Karnataka
+   - **Malayalam (ml)** - Kerala
+
+### **Testing Multilingual Features**
+
+```bash
+# Switch language and verify:
+1. All UI text translates
+2. Form labels and placeholders
+3. Error messages and toasts
+4. Date/time formats
+5. Number formats (Indian numbering: 1,00,000)
+6. RTL layout (if applicable)
+7. Offline translations work
+8. Language persists after reload
+```
+
+---
+
+## 🤝 Contributing
 
 ---
 

@@ -3,18 +3,20 @@ import { motion } from 'framer-motion';
 import { FiUser, FiLock, FiBell, FiGlobe, FiSave } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
+import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
   const { user, panchayat } = useAuth();
+  const { t } = useTranslation('settings');
   const [activeTab, setActiveTab] = useState('profile');
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: <FiUser /> },
-    { id: 'security', label: 'Security', icon: <FiLock /> },
-    { id: 'notifications', label: 'Notifications', icon: <FiBell /> },
-    { id: 'preferences', label: 'Preferences', icon: <FiGlobe /> },
+    { id: 'profile', label: t('tabs.profile'), icon: <FiUser /> },
+    { id: 'security', label: t('tabs.security'), icon: <FiLock /> },
+    { id: 'notifications', label: t('tabs.notifications'), icon: <FiBell /> },
+    { id: 'preferences', label: t('tabs.preferences'), icon: <FiGlobe /> },
   ];
 
   return (
@@ -24,7 +26,7 @@ const Settings = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <h1 className="text-4xl font-bold text-base-content mb-8">Settings</h1>
+          <h1 className="text-4xl font-bold text-base-content mb-8">{t('title')}</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar */}
@@ -65,6 +67,7 @@ const Settings = () => {
 };
 
 const ProfileSettings = ({ user, panchayat }) => {
+  const { t } = useTranslation('settings');
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     email: user?.email || '',
@@ -72,12 +75,12 @@ const ProfileSettings = ({ user, panchayat }) => {
   });
 
   const handleSave = () => {
-    toast.success('Profile updated successfully!');
+    toast.success(t('profile.profile_updated'));
   };
 
   return (
     <Card>
-      <h2 className="text-2xl font-bold mb-6">Profile Information</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('profile.title')}</h2>
       
       <div className="space-y-6">
         {/* Avatar */}
@@ -90,8 +93,8 @@ const ProfileSettings = ({ user, panchayat }) => {
             </div>
           </div>
           <div>
-            <button className="btn btn-outline btn-sm">Change Avatar</button>
-            <p className="text-xs text-base-content/60 mt-2">JPG, PNG or GIF (max. 2MB)</p>
+            <button className="btn btn-outline btn-sm">{t('profile.change_avatar')}</button>
+            <p className="text-xs text-base-content/60 mt-2">{t('profile.avatar_hint')}</p>
           </div>
         </div>
 
@@ -99,7 +102,7 @@ const ProfileSettings = ({ user, panchayat }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Full Name</span>
+              <span className="label-text font-medium">{t('profile.full_name')}</span>
             </label>
             <input
               type="text"
@@ -111,7 +114,7 @@ const ProfileSettings = ({ user, panchayat }) => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Username</span>
+              <span className="label-text font-medium">{t('profile.username')}</span>
             </label>
             <input
               type="text"
@@ -123,7 +126,7 @@ const ProfileSettings = ({ user, panchayat }) => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Email</span>
+              <span className="label-text font-medium">{t('profile.email')}</span>
             </label>
             <input
               type="email"
@@ -135,7 +138,7 @@ const ProfileSettings = ({ user, panchayat }) => {
 
           <div className="form-control">
             <label className="label">
-              <span className="label-text font-medium">Role</span>
+              <span className="label-text font-medium">{t('profile.role')}</span>
             </label>
             <input
               type="text"
@@ -149,22 +152,22 @@ const ProfileSettings = ({ user, panchayat }) => {
         {/* Panchayat Info */}
         {panchayat && (
           <div className="bg-base-200 p-4 rounded-lg">
-            <h3 className="font-semibold mb-3">Panchayat Information</h3>
+            <h3 className="font-semibold mb-3">{t('profile.panchayat_info.title')}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
               <div>
-                <span className="text-base-content/60">Name:</span>
+                <span className="text-base-content/60">{t('profile.panchayat_info.name')}</span>
                 <span className="ml-2 font-medium">{panchayat.name}</span>
               </div>
               <div>
-                <span className="text-base-content/60">Block:</span>
+                <span className="text-base-content/60">{t('profile.panchayat_info.block')}</span>
                 <span className="ml-2 font-medium">{panchayat.block}</span>
               </div>
               <div>
-                <span className="text-base-content/60">District:</span>
+                <span className="text-base-content/60">{t('profile.panchayat_info.district')}</span>
                 <span className="ml-2 font-medium">{panchayat.district}</span>
               </div>
               <div>
-                <span className="text-base-content/60">State:</span>
+                <span className="text-base-content/60">{t('profile.panchayat_info.state')}</span>
                 <span className="ml-2 font-medium">{panchayat.state}</span>
               </div>
             </div>
@@ -178,7 +181,7 @@ const ProfileSettings = ({ user, panchayat }) => {
           className="btn btn-primary"
         >
           <FiSave className="mr-2" />
-          Save Changes
+          {t('profile.save_changes')}
         </motion.button>
       </div>
     </Card>
@@ -186,6 +189,7 @@ const ProfileSettings = ({ user, panchayat }) => {
 };
 
 const SecuritySettings = () => {
+  const { t } = useTranslation('settings');
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',
@@ -196,21 +200,21 @@ const SecuritySettings = () => {
   const handleChangePassword = async () => {
     // Validation
     if (!passwords.current || !passwords.new || !passwords.confirm) {
-      toast.error('Please fill in all password fields', {
+      toast.error(t('security.all_fields_required'), {
         position: 'top-center'
       });
       return;
     }
 
     if (passwords.new !== passwords.confirm) {
-      toast.error('New passwords do not match', {
+      toast.error(t('security.password_mismatch'), {
         position: 'top-center'
       });
       return;
     }
 
     if (passwords.new.length < 6) {
-      toast.error('New password must be at least 6 characters long', {
+      toast.error(t('security.password_length_error'), {
         position: 'top-center'
       });
       return;
@@ -219,12 +223,12 @@ const SecuritySettings = () => {
     setLoading(true);
     try {
       await authService.changePassword(passwords.current, passwords.new);
-      toast.success('Password changed successfully!', {
+      toast.success(t('security.password_changed'), {
         position: 'top-center'
       });
       setPasswords({ current: '', new: '', confirm: '' });
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Failed to change password';
+      const errorMessage = error.response?.data?.detail || t('security.password_change_failed');
       toast.error(errorMessage, {
         position: 'top-center'
       });
@@ -235,12 +239,12 @@ const SecuritySettings = () => {
 
   return (
     <Card>
-      <h2 className="text-2xl font-bold mb-6">Security Settings</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('security.title')}</h2>
       
       <div className="space-y-6">
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">Current Password</span>
+            <span className="label-text font-medium">{t('security.current_password')}</span>
           </label>
           <input
             type="password"
@@ -252,7 +256,7 @@ const SecuritySettings = () => {
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">New Password</span>
+            <span className="label-text font-medium">{t('security.new_password')}</span>
           </label>
           <input
             type="password"
@@ -264,7 +268,7 @@ const SecuritySettings = () => {
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">Confirm New Password</span>
+            <span className="label-text font-medium">{t('security.confirm_password')}</span>
           </label>
           <input
             type="password"
@@ -284,21 +288,21 @@ const SecuritySettings = () => {
           {loading ? (
             <>
               <span className="loading loading-spinner loading-sm"></span>
-              Changing Password...
+              {t('security.changing_password')}
             </>
           ) : (
-            'Change Password'
+            t('security.change_password')
           )}
         </motion.button>
 
         <div className="divider"></div>
 
         <div className="space-y-3">
-          <h3 className="font-semibold">Two-Factor Authentication</h3>
+          <h3 className="font-semibold">{t('security.two_factor.title')}</h3>
           <p className="text-sm text-base-content/60">
-            Add an extra layer of security to your account
+            {t('security.two_factor.description')}
           </p>
-          <button className="btn btn-outline">Enable 2FA</button>
+          <button className="btn btn-outline">{t('security.two_factor.enable')}</button>
         </div>
       </div>
     </Card>
@@ -306,6 +310,7 @@ const SecuritySettings = () => {
 };
 
 const NotificationSettings = () => {
+  const { t } = useTranslation('settings');
   const [settings, setSettings] = useState({
     email_surveys: true,
     email_sync: true,
@@ -316,21 +321,21 @@ const NotificationSettings = () => {
 
   const handleToggle = (key) => {
     setSettings({ ...settings, [key]: !settings[key] });
-    toast.success('Settings updated');
+    toast.success(t('notifications.settings_updated'));
   };
 
   return (
     <Card>
-      <h2 className="text-2xl font-bold mb-6">Notification Preferences</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('notifications.title')}</h2>
       
       <div className="space-y-6">
         <div>
-          <h3 className="font-semibold mb-4">Email Notifications</h3>
+          <h3 className="font-semibold mb-4">{t('notifications.email.title')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Survey Updates</p>
-                <p className="text-sm text-base-content/60">Get notified about survey changes</p>
+                <p className="font-medium">{t('notifications.email.survey_updates.title')}</p>
+                <p className="text-sm text-base-content/60">{t('notifications.email.survey_updates.description')}</p>
               </div>
               <input
                 type="checkbox"
@@ -341,8 +346,8 @@ const NotificationSettings = () => {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Sync Notifications</p>
-                <p className="text-sm text-base-content/60">Notifications about sync status</p>
+                <p className="font-medium">{t('notifications.email.sync_notifications.title')}</p>
+                <p className="text-sm text-base-content/60">{t('notifications.email.sync_notifications.description')}</p>
               </div>
               <input
                 type="checkbox"
@@ -353,8 +358,8 @@ const NotificationSettings = () => {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Conflict Alerts</p>
-                <p className="text-sm text-base-content/60">Get alerts when conflicts occur</p>
+                <p className="font-medium">{t('notifications.email.conflict_alerts.title')}</p>
+                <p className="text-sm text-base-content/60">{t('notifications.email.conflict_alerts.description')}</p>
               </div>
               <input
                 type="checkbox"
@@ -369,12 +374,12 @@ const NotificationSettings = () => {
         <div className="divider"></div>
 
         <div>
-          <h3 className="font-semibold mb-4">Push Notifications</h3>
+          <h3 className="font-semibold mb-4">{t('notifications.push.title')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Survey Updates</p>
-                <p className="text-sm text-base-content/60">Browser push notifications</p>
+                <p className="font-medium">{t('notifications.push.survey_updates.title')}</p>
+                <p className="text-sm text-base-content/60">{t('notifications.push.survey_updates.description')}</p>
               </div>
               <input
                 type="checkbox"
@@ -385,8 +390,8 @@ const NotificationSettings = () => {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Sync Status</p>
-                <p className="text-sm text-base-content/60">Real-time sync updates</p>
+                <p className="font-medium">{t('notifications.push.sync_status.title')}</p>
+                <p className="text-sm text-base-content/60">{t('notifications.push.sync_status.description')}</p>
               </div>
               <input
                 type="checkbox"
@@ -403,34 +408,35 @@ const NotificationSettings = () => {
 };
 
 const PreferencesSettings = () => {
+  const { t } = useTranslation('settings');
   const [language, setLanguage] = useState('en');
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
 
   return (
     <Card>
-      <h2 className="text-2xl font-bold mb-6">Application Preferences</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('preferences.title')}</h2>
       
       <div className="space-y-6">
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">Language</span>
+            <span className="label-text font-medium">{t('preferences.language')}</span>
           </label>
           <select
             className="select select-bordered"
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
           >
-            <option value="en">English</option>
-            <option value="hi">हिंदी (Hindi)</option>
-            <option value="bn">বাংলা (Bengali)</option>
-            <option value="te">తెలుగు (Telugu)</option>
-            <option value="mr">मराठी (Marathi)</option>
+            <option value="en">{t('preferences.languages.en')}</option>
+            <option value="hi">{t('preferences.languages.hi')}</option>
+            <option value="bn">{t('preferences.languages.bn')}</option>
+            <option value="te">{t('preferences.languages.te')}</option>
+            <option value="mr">{t('preferences.languages.mr')}</option>
           </select>
         </div>
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text font-medium">Date Format</span>
+            <span className="label-text font-medium">{t('preferences.date_format')}</span>
           </label>
           <select
             className="select select-bordered"
@@ -446,9 +452,9 @@ const PreferencesSettings = () => {
         <div className="divider"></div>
 
         <div className="space-y-3">
-          <h3 className="font-semibold">Data & Storage</h3>
-          <button className="btn btn-outline w-full">Clear Cache</button>
-          <button className="btn btn-outline btn-error w-full">Clear All Local Data</button>
+          <h3 className="font-semibold">{t('preferences.data_storage.title')}</h3>
+          <button className="btn btn-outline w-full">{t('preferences.data_storage.clear_cache')}</button>
+          <button className="btn btn-outline btn-error w-full">{t('preferences.data_storage.clear_all_data')}</button>
         </div>
 
         <motion.button
@@ -457,7 +463,7 @@ const PreferencesSettings = () => {
           className="btn btn-primary w-full"
         >
           <FiSave className="mr-2" />
-          Save Preferences
+          {t('preferences.save_preferences')}
         </motion.button>
       </div>
     </Card>
