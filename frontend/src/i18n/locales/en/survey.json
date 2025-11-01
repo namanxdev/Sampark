@@ -1,0 +1,74 @@
+{
+  "title": "Surveys",
+  "new_survey": "New Survey",
+  "all_surveys": "All Surveys",
+  "my_surveys": "My Surveys",
+  
+  "fields": {
+    "village_name": "Village Name",
+    "village_name_placeholder": "Enter village name",
+    "panchayat": "Panchayat",
+    "panchayat_id": "Panchayat ID",
+    "created_by": "Created By",
+    "created_at": "Created On",
+    "updated_at": "Updated On",
+    "completion": "Completion",
+    "progress": "Progress",
+    "status": "Status"
+  },
+  
+  "status": {
+    "all": "All",
+    "complete": "Complete",
+    "in_progress": "In Progress",
+    "pending_sync": "Pending Sync",
+    "synced": "Synced"
+  },
+  
+  "modules": {
+    "basic_info": "Basic Information",
+    "infrastructure": "Infrastructure",
+    "sanitation": "Sanitation",
+    "connectivity": "Connectivity",
+    "land_forest": "Land & Forest",
+    "electricity": "Electricity",
+    "waste_management": "Waste Management"
+  },
+  
+  "actions": {
+    "view_survey": "View Survey",
+    "edit_survey": "Edit Survey",
+    "delete_survey": "Delete Survey",
+    "duplicate_survey": "Duplicate Survey",
+    "export_survey": "Export Survey"
+  },
+  
+  "messages": {
+    "no_surveys": "No surveys found",
+    "create_first": "Create your first survey to get started",
+    "loading_surveys": "Loading surveys...",
+    "survey_created": "Survey created successfully",
+    "survey_updated": "Survey updated successfully",
+    "survey_deleted": "Survey deleted successfully",
+    "delete_confirm": "Are you sure you want to delete '{{name}}'? This action cannot be undone.",
+    "delete_offline": "Survey will be deleted when you're back online",
+    "sync_required": "This survey has unsaved changes. Please sync when online."
+  },
+  
+  "stats": {
+    "total": "Total Surveys",
+    "completed": "Completed",
+    "in_progress": "In Progress",
+    "pending_sync": "Pending Sync"
+  },
+  
+  "search_placeholder": "Search by village name...",
+  "filter_by": "Filter by",
+  "sort_by": "Sort by",
+  "newest_first": "Newest First",
+  "oldest_first": "Oldest First",
+  "village_az": "Village A-Z",
+  "village_za": "Village Z-A",
+  "no_results": "No surveys match your search",
+  "showing": "Showing {{count}} surveys"
+}

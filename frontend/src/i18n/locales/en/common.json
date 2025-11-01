@@ -1,0 +1,130 @@
+{
+  "app_name": "Sampark",
+  "tagline": "Modular Offline Data Collection for Panchayats",
+  
+  "navigation": {
+    "dashboard": "Dashboard",
+    "surveys": "Surveys",
+    "settings": "Settings",
+    "help": "Help",
+    "users": "Users",
+    "offline_demo": "Offline Demo",
+    "profile": "Profile"
+  },
+  
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "create": "Create",
+    "update": "Update",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "clear": "Clear",
+    "reset": "Reset",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "import": "Import",
+    "refresh": "Refresh",
+    "logout": "Logout"
+  },
+  
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "synced": "Synced",
+    "pending": "Pending",
+    "syncing": "Syncing",
+    "complete": "Complete",
+    "incomplete": "Incomplete",
+    "in_progress": "In Progress",
+    "draft": "Draft",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  
+  "messages": {
+    "loading": "Loading...",
+    "saving": "Saving...",
+    "deleting": "Deleting...",
+    "processing": "Processing...",
+    "success": "Success!",
+    "error": "Error occurred",
+    "no_data": "No data available",
+    "no_results": "No results found",
+    "confirm_delete": "Are you sure you want to delete this?",
+    "changes_saved": "Changes saved successfully",
+    "operation_failed": "Operation failed. Please try again.",
+    "network_error": "Network error. Check your connection.",
+    "offline_mode": "Working in offline mode"
+  },
+  
+  "sync": {
+    "sync_now": "Sync Now",
+    "last_sync": "Last synced",
+    "pending_changes": "{{count}} pending change",
+    "pending_changes_plural": "{{count}} pending changes",
+    "sync_in_progress": "Sync in progress...",
+    "sync_complete": "Sync completed successfully",
+    "sync_failed": "Sync failed",
+    "auto_sync": "Auto Sync",
+    "manual_sync": "Manual Sync",
+    "sync_history": "Sync History"
+  },
+  
+  "time": {
+    "just_now": "Just now",
+    "minutes_ago": "{{count}} minute ago",
+    "minutes_ago_plural": "{{count}} minutes ago",
+    "hours_ago": "{{count}} hour ago",
+    "hours_ago_plural": "{{count}} hours ago",
+    "days_ago": "{{count}} day ago",
+    "days_ago_plural": "{{count}} days ago",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  
+  "validation": {
+    "required": "This field is required",
+    "invalid_email": "Invalid email address",
+    "invalid_phone": "Invalid phone number",
+    "min_length": "Minimum {{count}} characters required",
+    "max_length": "Maximum {{count}} characters allowed",
+    "number_only": "Only numbers allowed",
+    "positive_number": "Must be a positive number"
+  },
+  
+  "accessibility": {
+    "menu": "Menu",
+    "close_menu": "Close menu",
+    "open_menu": "Open menu",
+    "user_menu": "User menu",
+    "language_menu": "Language menu",
+    "logout": "Logout"
+  },
+  
+  "dashboard": {
+    "welcome": "Welcome back, {{name}}! 👋",
+    "overview": "Your Dashboard Overview",
+    "panchayat_info": "{{name}}, {{district}}",
+    "total_surveys": "Total Surveys",
+    "completed": "Completed",
+    "in_progress": "In Progress",
+    "pending_sync": "Pending Sync",
+    "recent_surveys": "Recent Surveys",
+    "quick_actions": "Quick Actions",
+    "create_new_survey": "Create New Survey",
+    "view_all_surveys": "View All Surveys",
+    "sync_data": "Sync Data",
+    "no_surveys": "No surveys yet",
+    "get_started": "Create your first survey to get started!",
+    "village": "Village",
+    "last_updated": "Last Updated",
+    "view_details": "View Details"
+  }
+}

@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useSync } from '../context/SyncContext';
+import { useTranslation } from 'react-i18next';
 import { FiWifi, FiWifiOff, FiRefreshCw, FiCheckCircle, FiAlertCircle, FiClock } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const SyncStatusIndicator = ({ showDetails = false }) => {
+  const { t } = useTranslation('common');
   const { syncStatus, isOnline, isSyncing, hasPendingChanges, triggerSync } = useSync();
   const [showTooltip, setShowTooltip] = useState(false);
   const [lastSyncText, setLastSyncText] = useState('Never');
@@ -16,15 +18,15 @@ const SyncStatusIndicator = ({ showDetails = false }) => {
         const diffMinutes = Math.floor((now - lastSync) / 60000);
 
         if (diffMinutes < 1) {
-          setLastSyncText('Just now');
+          setLastSyncText(t('time.just_now'));
         } else if (diffMinutes < 60) {
-          setLastSyncText(`${diffMinutes}m ago`);
+          setLastSyncText(t('time.minutes_ago', { count: diffMinutes }));
         } else if (diffMinutes < 1440) {
           const hours = Math.floor(diffMinutes / 60);
-          setLastSyncText(`${hours}h ago`);
+          setLastSyncText(t('time.hours_ago', { count: hours }));
         } else {
           const days = Math.floor(diffMinutes / 1440);
-          setLastSyncText(`${days}d ago`);
+          setLastSyncText(t('time.days_ago', { count: days }));
         }
       };
 
@@ -33,30 +35,30 @@ const SyncStatusIndicator = ({ showDetails = false }) => {
 
       return () => clearInterval(interval);
     }
-  }, [syncStatus.lastSync]);
+  }, [syncStatus.lastSync, t]);
 
   const handleSyncClick = async () => {
     if (!isOnline) {
-      toast.error('Cannot sync while offline');
+      toast.error(t('messages.network_error'));
       return;
     }
 
     if (isSyncing) {
-      toast('Sync already in progress', { icon: '⏳' });
+      toast(t('sync.sync_in_progress'), { icon: '⏳' });
       return;
     }
 
     try {
-      toast.loading('Syncing...', { id: 'sync' });
+      toast.loading(t('sync.sync_in_progress'), { id: 'sync' });
       const result = await triggerSync();
       
       if (result.success > 0) {
-        toast.success(`Synced ${result.success} item(s)`, { id: 'sync' });
+        toast.success(t('sync.sync_complete'), { id: 'sync' });
       } else {
-        toast.success('All data is up to date', { id: 'sync' });
+        toast.success(t('sync.sync_complete'), { id: 'sync' });
       }
     } catch (error) {
-      toast.error('Sync failed: ' + error.message, { id: 'sync' });
+      toast.error(t('sync.sync_failed'), { id: 'sync' });
     }
   };
 
@@ -74,10 +76,10 @@ const SyncStatusIndicator = ({ showDetails = false }) => {
   };
 
   const getStatusText = () => {
-    if (isSyncing) return 'Syncing...';
-    if (!isOnline) return 'Offline';
-    if (hasPendingChanges) return `${syncStatus.pendingOperations} pending`;
-    return 'Synced';
+    if (isSyncing) return t('status.syncing');
+    if (!isOnline) return t('status.offline');
+    if (hasPendingChanges) return t('sync.pending_changes', { count: syncStatus.pendingOperations });
+    return t('status.synced');
   };
 
   const getStatusColor = () => {

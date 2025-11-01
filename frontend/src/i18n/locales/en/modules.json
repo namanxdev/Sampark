@@ -1,0 +1,139 @@
+{
+  "basic_info": {
+    "title": "Basic Information",
+    "description": "General village demographics and household data",
+    "total_households": "Total Households",
+    "total_population": "Total Population",
+    "male_population": "Male Population",
+    "female_population": "Female Population",
+    "children_0_6": "Children (0-6 years)",
+    "sc_population": "SC Population",
+    "st_population": "ST Population",
+    "literacy_rate": "Literacy Rate (%)",
+    "bpl_families": "BPL Families",
+    "village_area": "Village Area (hectares)"
+  },
+  
+  "infrastructure": {
+    "title": "Infrastructure",
+    "description": "Roads, buildings, and public facilities",
+    "paved_roads": "Paved Roads (km)",
+    "unpaved_roads": "Unpaved Roads (km)",
+    "public_buildings": "Number of Public Buildings",
+    "schools": "Number of Schools",
+    "primary_schools": "Primary Schools",
+    "secondary_schools": "Secondary Schools",
+    "health_centers": "Health Centers/Hospitals",
+    "anganwadi_centers": "Anganwadi Centers",
+    "community_halls": "Community Halls",
+    "playgrounds": "Playgrounds",
+    "libraries": "Libraries"
+  },
+  
+  "sanitation": {
+    "title": "Sanitation",
+    "description": "Toilet facilities, drainage, and sewerage",
+    "individual_toilets": "Individual Household Toilets",
+    "community_toilets": "Community/Public Toilets",
+    "drainage_system": "Drainage System Available",
+    "sewerage_system": "Sewerage System Available",
+    "open_defecation": "Open Defecation Free Status",
+    "drainage_covered": "Covered Drainage (meters)",
+    "drainage_open": "Open Drainage (meters)",
+    "solid_waste_mgmt": "Solid Waste Management System"
+  },
+  
+  "connectivity": {
+    "title": "Connectivity",
+    "description": "Internet, mobile network, and transportation",
+    "internet_access": "Internet Access Available",
+    "mobile_network": "Mobile Network Coverage",
+    "broadband": "Broadband Connections",
+    "common_service_center": "Common Service Center",
+    "public_transport": "Public Transport Available",
+    "bus_service": "Bus Service Frequency",
+    "railway_station": "Railway Station (km away)",
+    "paved_road_access": "All-weather Road Access"
+  },
+  
+  "land_forest": {
+    "title": "Land & Forest",
+    "description": "Agricultural land, forest, and water resources",
+    "total_land": "Total Land Area (hectares)",
+    "agricultural_land": "Agricultural Land (hectares)",
+    "irrigated_land": "Irrigated Land (hectares)",
+    "forest_area": "Forest Area (hectares)",
+    "waste_land": "Waste/Barren Land (hectares)",
+    "ponds": "Number of Ponds/Lakes",
+    "wells": "Number of Wells",
+    "tube_wells": "Number of Tube Wells",
+    "canals": "Canal Irrigation (km)",
+    "grazing_land": "Grazing Land (hectares)"
+  },
+  
+  "electricity": {
+    "title": "Electricity",
+    "description": "Power supply and electrification status",
+    "power_supply_hours": "Power Supply (hours/day)",
+    "electrified_households": "Electrified Households",
+    "agricultural_connections": "Agricultural Connections",
+    "commercial_connections": "Commercial Connections",
+    "street_lights": "Number of Street Lights",
+    "solar_street_lights": "Solar Street Lights",
+    "solar_panels_installed": "Households with Solar Panels",
+    "power_cuts_frequency": "Power Cuts (per week)",
+    "transformer_capacity": "Transformer Capacity (KVA)"
+  },
+  
+  "waste_management": {
+    "title": "Waste Management",
+    "description": "Collection, segregation, and disposal systems",
+    "waste_collection": "Waste Collection System",
+    "door_to_door": "Door-to-Door Collection",
+    "collection_frequency": "Collection Frequency",
+    "segregation_practiced": "Waste Segregation at Source",
+    "composting": "Composting Facility",
+    "recycling": "Recycling Program",
+    "disposal_method": "Waste Disposal Method",
+    "landfill_distance": "Landfill Distance (km)",
+    "biogas_plants": "Biogas Plants",
+    "plastic_ban_enforced": "Plastic Ban Enforced"
+  },
+  
+  "options": {
+    "yes": "Yes",
+    "no": "No",
+    "partial": "Partial",
+    "not_available": "Not Available",
+    "excellent": "Excellent",
+    "good": "Good",
+    "average": "Average",
+    "poor": "Poor",
+    "daily": "Daily",
+    "weekly": "Weekly",
+    "fortnightly": "Fortnightly",
+    "monthly": "Monthly",
+    "landfill": "Landfill",
+    "composting": "Composting",
+    "open_dumping": "Open Dumping",
+    "burning": "Burning",
+    "recycling": "Recycling"
+  },
+  
+  "placeholders": {
+    "enter_number": "Enter number",
+    "enter_value": "Enter value",
+    "select_option": "Select an option"
+  },
+  
+  "units": {
+    "households": "households",
+    "persons": "persons",
+    "km": "km",
+    "hectares": "hectares",
+    "meters": "meters",
+    "hours": "hours per day",
+    "percent": "%",
+    "kva": "KVA"
+  }
+}
