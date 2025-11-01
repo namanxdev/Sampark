@@ -10,7 +10,7 @@ database_url = settings.DATABASE_URL.replace("postgresql://", "postgresql://")
 engine = create_engine(
     database_url,
     pool_pre_ping=True,  # Verify connections before using
-    echo=True  # Log SQL queries (disable in production)
+    # echo=True  # Log SQL queries (disable in production)
 )
 
 # Session factory

@@ -31,6 +31,10 @@ def is_cors_allowed(origin: str) -> bool:
     if origin and origin.endswith('.vercel.app'):
         return True
     
+    # Allow custom domain (with or without www)
+    if origin and ('thesampark.tech' in origin):
+        return True
+    
     return False
 
 # Custom CORS middleware to allow Vercel preview deployments
