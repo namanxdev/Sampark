@@ -58,8 +58,12 @@ export const calculateModuleCompletion = (moduleId, data = {}) => {
   const moduleConfig = MODULE_FIELDS[moduleId];
   if (!moduleConfig) return 0;
 
-  const filledFields = Object.keys(data).filter(key => {
-    const value = data[key];
+  // Get list of valid field names from module configuration
+  const validFieldNames = moduleConfig.fields.map(f => f.name);
+
+  // Only count fields that are defined in our configuration
+  const filledFields = validFieldNames.filter(fieldName => {
+    const value = data[fieldName];
     return value !== undefined && value !== null && value !== '';
   }).length;
 
@@ -80,8 +84,13 @@ export const calculateOverallCompletion = (formData = {}) => {
     totalFields += moduleConfig.totalFields;
 
     const moduleData = formData[moduleId] || {};
-    const filled = Object.keys(moduleData).filter(key => {
-      const value = moduleData[key];
+    
+    // Get list of valid field names from module configuration
+    const validFieldNames = moduleConfig.fields.map(f => f.name);
+    
+    // Only count fields that are defined in our configuration
+    const filled = validFieldNames.filter(fieldName => {
+      const value = moduleData[fieldName];
       return value !== undefined && value !== null && value !== '';
     }).length;
 
@@ -112,8 +121,12 @@ export const getCompletionStats = (formData = {}) => {
     const moduleConfig = MODULE_FIELDS[moduleId];
     const moduleData = formData[moduleId] || {};
     
-    const filled = Object.keys(moduleData).filter(key => {
-      const value = moduleData[key];
+    // Get list of valid field names from module configuration
+    const validFieldNames = moduleConfig.fields.map(f => f.name);
+    
+    // Only count fields that are defined in our configuration
+    const filled = validFieldNames.filter(fieldName => {
+      const value = moduleData[fieldName];
       return value !== undefined && value !== null && value !== '';
     }).length;
 
@@ -184,9 +197,15 @@ export const countFilledFields = (formData = {}) => {
   let count = 0;
   
   Object.keys(MODULE_FIELDS).forEach(moduleId => {
+    const moduleConfig = MODULE_FIELDS[moduleId];
     const moduleData = formData[moduleId] || {};
-    count += Object.keys(moduleData).filter(key => {
-      const value = moduleData[key];
+    
+    // Get list of valid field names from module configuration
+    const validFieldNames = moduleConfig.fields.map(f => f.name);
+    
+    // Only count fields that are defined in our configuration
+    count += validFieldNames.filter(fieldName => {
+      const value = moduleData[fieldName];
       return value !== undefined && value !== null && value !== '';
     }).length;
   });

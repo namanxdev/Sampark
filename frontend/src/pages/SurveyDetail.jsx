@@ -368,7 +368,13 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
   
   // Calculate module completion
   const moduleCompletion = calculateModuleCompletion(moduleId, data);
-  const filledFields = Object.keys(data).filter(key => data[key] !== '' && data[key] !== null && data[key] !== undefined).length;
+  
+  // Only count valid fields that are defined in our configuration
+  const validFieldNames = fields.map(f => f.name);
+  const filledFields = validFieldNames.filter(fieldName => {
+    const value = data[fieldName];
+    return value !== '' && value !== null && value !== undefined;
+  }).length;
 
   return (
     <div className="space-y-6">
