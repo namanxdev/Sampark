@@ -1,0 +1,100 @@
+{
+  "title": "Settings",
+  
+  "tabs": {
+    "profile": "Profile",
+    "security": "Security",
+    "notifications": "Notifications",
+    "preferences": "Preferences"
+  },
+  
+  "profile": {
+    "title": "Profile Information",
+    "change_avatar": "Change Avatar",
+    "avatar_hint": "JPG, PNG or GIF (max. 2MB)",
+    "full_name": "Full Name",
+    "username": "Username",
+    "email": "Email",
+    "role": "Role",
+    "save_changes": "Save Changes",
+    "profile_updated": "Profile updated successfully!",
+    
+    "panchayat_info": {
+      "title": "Panchayat Information",
+      "name": "Name:",
+      "block": "Block:",
+      "district": "District:",
+      "state": "State:"
+    }
+  },
+  
+  "security": {
+    "title": "Security Settings",
+    "current_password": "Current Password",
+    "new_password": "New Password",
+    "confirm_password": "Confirm New Password",
+    "change_password": "Change Password",
+    "password_mismatch": "Passwords do not match",
+    "password_changed": "Password changed successfully!",
+    
+    "two_factor": {
+      "title": "Two-Factor Authentication",
+      "description": "Add an extra layer of security to your account",
+      "enable": "Enable 2FA"
+    }
+  },
+  
+  "notifications": {
+    "title": "Notification Preferences",
+    "settings_updated": "Settings updated",
+    
+    "email": {
+      "title": "Email Notifications",
+      "survey_updates": {
+        "title": "Survey Updates",
+        "description": "Get notified about survey changes"
+      },
+      "sync_notifications": {
+        "title": "Sync Notifications",
+        "description": "Notifications about sync status"
+      },
+      "conflict_alerts": {
+        "title": "Conflict Alerts",
+        "description": "Get alerts when conflicts occur"
+      }
+    },
+    
+    "push": {
+      "title": "Push Notifications",
+      "survey_updates": {
+        "title": "Survey Updates",
+        "description": "Browser push notifications"
+      },
+      "sync_status": {
+        "title": "Sync Status",
+        "description": "Real-time sync updates"
+      }
+    }
+  },
+  
+  "preferences": {
+    "title": "Application Preferences",
+    "language": "Language",
+    "date_format": "Date Format",
+    "save_preferences": "Save Preferences",
+    
+    "languages": {
+      "en": "English",
+      "hi": "हिंदी (Hindi)",
+      "bn": "বাংলা (Bengali)",
+      "te": "తెలుగు (Telugu)",
+      "mr": "मराठी (Marathi)"
+    },
+    
+    "data_storage": {
+      "title": "Data & Storage",
+      "clear_cache": "Clear Cache",
+      "clear_all_data": "Clear All Local Data"
+    }
+  }
+}

@@ -12,11 +12,13 @@ import enCommon from './locales/en/common.json';
 import enAuth from './locales/en/auth.json';
 import enSurvey from './locales/en/survey.json';
 import enModules from './locales/en/modules.json';
+import enSettings from './locales/en/settings.json';
 
 import hiCommon from './locales/hi/common.json';
 import hiAuth from './locales/hi/auth.json';
 import hiSurvey from './locales/hi/survey.json';
 import hiModules from './locales/hi/modules.json';
+import hiSettings from './locales/hi/settings.json';
 
 // Add more languages as needed
 // import paCommon from './locales/pa/common.json';
@@ -28,12 +30,14 @@ const resources = {
     auth: enAuth,
     survey: enSurvey,
     modules: enModules,
+    settings: enSettings,
   },
   hi: {
     common: hiCommon,
     auth: hiAuth,
     survey: hiSurvey,
     modules: hiModules,
+    settings: hiSettings,
   },
   // Add more languages here
 };

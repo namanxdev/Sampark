@@ -1,0 +1,100 @@
+{
+  "title": "सेटिंग्स",
+  
+  "tabs": {
+    "profile": "प्रोफ़ाइल",
+    "security": "सुरक्षा",
+    "notifications": "सूचनाएं",
+    "preferences": "प्राथमिकताएं"
+  },
+  
+  "profile": {
+    "title": "प्रोफ़ाइल जानकारी",
+    "change_avatar": "अवतार बदलें",
+    "avatar_hint": "JPG, PNG या GIF (अधिकतम 2MB)",
+    "full_name": "पूरा नाम",
+    "username": "उपयोगकर्ता नाम",
+    "email": "ईमेल",
+    "role": "भूमिका",
+    "save_changes": "परिवर्तन सहेजें",
+    "profile_updated": "प्रोफ़ाइल सफलतापूर्वक अपडेट हुआ!",
+    
+    "panchayat_info": {
+      "title": "पंचायत जानकारी",
+      "name": "नाम:",
+      "block": "ब्लॉक:",
+      "district": "जिला:",
+      "state": "राज्य:"
+    }
+  },
+  
+  "security": {
+    "title": "सुरक्षा सेटिंग्स",
+    "current_password": "वर्तमान पासवर्ड",
+    "new_password": "नया पासवर्ड",
+    "confirm_password": "नया पासवर्ड दोबारा दर्ज करें",
+    "change_password": "पासवर्ड बदलें",
+    "password_mismatch": "पासवर्ड मेल नहीं खाते",
+    "password_changed": "पासवर्ड सफलतापूर्वक बदल गया!",
+    
+    "two_factor": {
+      "title": "दो-कारक प्रमाणीकरण",
+      "description": "अपने खाते में सुरक्षा की एक अतिरिक्त परत जोड़ें",
+      "enable": "2FA सक्षम करें"
+    }
+  },
+  
+  "notifications": {
+    "title": "सूचना प्राथमिकताएं",
+    "settings_updated": "सेटिंग्स अपडेट हुईं",
+    
+    "email": {
+      "title": "ईमेल सूचनाएं",
+      "survey_updates": {
+        "title": "सर्वेक्षण अपडेट",
+        "description": "सर्वेक्षण परिवर्तनों के बारे में सूचित रहें"
+      },
+      "sync_notifications": {
+        "title": "सिंक सूचनाएं",
+        "description": "सिंक स्थिति के बारे में सूचनाएं"
+      },
+      "conflict_alerts": {
+        "title": "संघर्ष चेतावनी",
+        "description": "संघर्ष होने पर चेतावनी प्राप्त करें"
+      }
+    },
+    
+    "push": {
+      "title": "पुश सूचनाएं",
+      "survey_updates": {
+        "title": "सर्वेक्षण अपडेट",
+        "description": "ब्राउज़र पुश सूचनाएं"
+      },
+      "sync_status": {
+        "title": "सिंक स्थिति",
+        "description": "रियल-टाइम सिंक अपडेट"
+      }
+    }
+  },
+  
+  "preferences": {
+    "title": "एप्लिकेशन प्राथमिकताएं",
+    "language": "भाषा",
+    "date_format": "तिथि प्रारूप",
+    "save_preferences": "प्राथमिकताएं सहेजें",
+    
+    "languages": {
+      "en": "English",
+      "hi": "हिंदी (Hindi)",
+      "bn": "বাংলা (Bengali)",
+      "te": "తెలుగు (Telugu)",
+      "mr": "मराठी (Marathi)"
+    },
+    
+    "data_storage": {
+      "title": "डेटा और स्टोरेज",
+      "clear_cache": "कैश साफ़ करें",
+      "clear_all_data": "सभी स्थानीय डेटा साफ़ करें"
+    }
+  }
+}
