@@ -579,6 +579,74 @@ class IndexedDBService {
       throw error;
     }
   }
+
+  /**
+   * Save survey draft (auto-save)
+   * This is used for auto-saving form data every 30 seconds
+   */
+  async saveDraft(surveyId, draftData) {
+    try {
+      const survey = await this.getSurveyById(surveyId);
+      
+      if (survey) {
+        // Update existing survey with draft data
+        const updatedSurvey = {
+          ...survey,
+          ...draftData,
+          updated_at: new Date().toISOString(),
+          is_draft: true, // Mark as draft
+          last_auto_save: new Date().toISOString(),
+        };
+
+        // Save without adding to sync queue yet (will sync on manual save)
+        return await this.saveSurvey(updatedSurvey, false);
+      } else {
+        console.warn('Survey not found for draft save:', surveyId);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error in saveDraft:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get draft data for a survey
+   */
+  async getDraft(surveyId) {
+    try {
+      const survey = await this.getSurveyById(surveyId);
+      return survey || null;
+    } catch (error) {
+      console.error('Error in getDraft:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark survey as final (not a draft anymore)
+   */
+  async markAsFinal(surveyId) {
+    try {
+      const survey = await this.getSurveyById(surveyId);
+      
+      if (survey) {
+        const updatedSurvey = {
+          ...survey,
+          is_draft: false,
+          synced: false, // Mark as unsynced so it gets pushed to server
+          updated_at: new Date().toISOString(),
+        };
+
+        // Save and add to sync queue for final save
+        return await this.saveSurvey(updatedSurvey, true);
+      }
+      return null;
+    } catch (error) {
+      console.error('Error in markAsFinal:', error);
+      throw error;
+    }
+  }
 }
 
 // Create and export singleton instance

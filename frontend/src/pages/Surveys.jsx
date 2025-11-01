@@ -176,6 +176,20 @@ const Surveys = () => {
               // Use survey_id, local_id, or IndexedDB id as the identifier (priority order)
               const surveyIdentifier = survey.survey_id || survey.local_id || survey.id;
               
+              // Determine sync status badge
+              const getSyncStatus = () => {
+                if (!isOnline) {
+                  return { label: 'offline', color: 'badge-warning' };
+                } else if (survey.synced === false || survey.sync_status === 'pending') {
+                  return { label: 'pending', color: 'badge-warning' };
+                } else if (survey.sync_status === 'synced' || survey.synced === true) {
+                  return { label: 'synced', color: 'badge-success' };
+                } else {
+                  return { label: survey.sync_status || 'pending', color: STATUS_COLORS[survey.sync_status || 'pending'] };
+                }
+              };
+              const syncStatus = getSyncStatus();
+              
               return (
               <motion.div
                 key={surveyIdentifier}
@@ -195,8 +209,8 @@ const Surveys = () => {
                           ID: {surveyIdentifier.slice(-8)}
                         </p>
                       </div>
-                      <div className={`badge ${STATUS_COLORS[survey.sync_status || 'pending']}`}>
-                        {survey.synced ? t('common:status.synced') : (survey.sync_status || t('common:status.pending'))}
+                      <div className={`badge ${syncStatus.color}`}>
+                        {t(`common:status.${syncStatus.label}`)}
                       </div>
                     </div>
 

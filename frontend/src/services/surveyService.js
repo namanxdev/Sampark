@@ -39,10 +39,16 @@ export const surveyService = {
         for (const serverSurvey of serverSurveys) {
           const existing = await indexedDBService.getSurveyById(serverSurvey.survey_id);
           if (existing) {
-            // Update existing survey
+            // Update existing survey - preserve local data if it's newer or unsynced
+            if (existing.synced === false) {
+              console.log(`⚠️ Skipping server update for ${serverSurvey.survey_id} - has unsynced local changes`);
+              continue;
+            }
+            
             await indexedDBService.updateSurvey(existing.id, {
               ...serverSurvey,
               synced: true,
+              sync_status: 'synced',
               synced_at: new Date().toISOString(),
             }, false); // false = don't add to sync queue!
           } else {
@@ -50,6 +56,7 @@ export const surveyService = {
             await indexedDBService.saveSurvey({
               ...serverSurvey,
               synced: true,
+              sync_status: 'synced',
               synced_at: new Date().toISOString(),
               local_id: `server_${serverSurvey.survey_id}`,
             }, false); // false = don't add to sync queue!
@@ -227,20 +234,37 @@ export const surveyService = {
     await ensureDBInitialized();
     
     console.log('🔄 updateSurvey called with:', surveyId);
+    console.log('📝 Survey data to update:', surveyData);
     
     // Find survey in IndexedDB using the improved getSurveyById
     const localSurvey = await indexedDBService.getSurveyById(surveyId);
 
     if (localSurvey) {
+      // Merge the data properly to preserve existing module data
+      const mergedData = {
+        ...localSurvey,
+        ...surveyData,
+        // Ensure module data is properly merged
+        basic_info: surveyData.basic_info || localSurvey.basic_info,
+        infrastructure: surveyData.infrastructure || localSurvey.infrastructure,
+        sanitation: surveyData.sanitation || localSurvey.sanitation,
+        connectivity: surveyData.connectivity || localSurvey.connectivity,
+        land_forest: surveyData.land_forest || localSurvey.land_forest,
+        electricity: surveyData.electricity || localSurvey.electricity,
+        waste_management: surveyData.waste_management || localSurvey.waste_management,
+        updated_at: new Date().toISOString(),
+      };
+      
       // Update in IndexedDB using the IndexedDB ID
-      await indexedDBService.updateSurvey(localSurvey.id, surveyData);
-      console.log('✅ Survey updated in IndexedDB');
+      await indexedDBService.updateSurvey(localSurvey.id, mergedData);
+      console.log('✅ Survey updated in IndexedDB with merged data');
     } else {
       // Create new local survey
       console.log('⚠️ Survey not found locally, creating new entry');
       await indexedDBService.saveSurvey({
         ...surveyData,
         survey_id: surveyId,
+        updated_at: new Date().toISOString(),
       });
     }
 
@@ -249,6 +273,17 @@ export const surveyService = {
       try {
         const response = await api.put(`/api/surveys/${surveyId}`, surveyData);
         console.log('✅ Survey synced to server');
+        
+        // Update local survey with synced status
+        const updatedLocalSurvey = await indexedDBService.getSurveyById(surveyId);
+        if (updatedLocalSurvey) {
+          await indexedDBService.updateSurvey(updatedLocalSurvey.id, {
+            synced: true,
+            sync_status: 'synced',
+            synced_at: new Date().toISOString(),
+          }, false); // Don't add to sync queue
+        }
+        
         return response.data;
       } catch (error) {
         console.log('⚠️ Failed to sync immediately, will sync later:', error.message);
@@ -359,5 +394,119 @@ export const surveyService = {
     // Return local sync logs
     const logs = await indexedDBService.getSyncLogs(params.limit || 50);
     return logs;
+  },
+
+  /**
+   * Auto-save draft - saves to IndexedDB without syncing
+   * Called every 30 seconds during form editing
+   */
+  async autoSaveDraft(surveyId, formData) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('🔄 Auto-saving draft for survey:', surveyId);
+      
+      // Calculate completion percentage
+      const completionPercentage = this.calculateCompletion(formData);
+      
+      const draftData = {
+        ...formData,
+        completion_percentage: completionPercentage,
+        is_complete: completionPercentage === 100,
+        client_timestamp: new Date().toISOString(),
+      };
+
+      // Save draft to IndexedDB (doesn't add to sync queue)
+      await indexedDBService.saveDraft(surveyId, draftData);
+      
+      console.log('✅ Draft auto-saved successfully');
+      return { success: true, timestamp: new Date().toISOString() };
+    } catch (error) {
+      console.error('❌ Failed to auto-save draft:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Manual save - saves to IndexedDB and syncs if online
+   * Called when user clicks "Save Survey" button
+   */
+  async manualSave(surveyId, formData) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('💾 Manual save for survey:', surveyId);
+      
+      const completionPercentage = this.calculateCompletion(formData);
+      
+      const updatedData = {
+        ...formData,
+        completion_percentage: completionPercentage,
+        is_complete: completionPercentage === 100,
+        client_timestamp: new Date().toISOString(),
+      };
+
+      // Mark as final (not a draft) and add to sync queue
+      await indexedDBService.markAsFinal(surveyId);
+      
+      // Now update with the latest data
+      await this.updateSurvey(surveyId, updatedData);
+      
+      console.log('✅ Manual save successful');
+      return { success: true, synced: isOnline() };
+    } catch (error) {
+      console.error('❌ Failed to manually save:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Load draft from IndexedDB
+   * Called when loading survey detail page
+   */
+  async loadDraft(surveyId) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('📂 Loading draft for survey:', surveyId);
+      const draft = await indexedDBService.getDraft(surveyId);
+      
+      if (draft) {
+        console.log('✅ Draft loaded successfully');
+        return draft;
+      }
+      
+      console.log('⚠️ No draft found');
+      return null;
+    } catch (error) {
+      console.error('❌ Failed to load draft:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Calculate completion percentage for survey
+   */
+  calculateCompletion(formData) {
+    const MODULES = [
+      'basic_info',
+      'infrastructure', 
+      'sanitation',
+      'connectivity',
+      'land_forest',
+      'electricity',
+      'waste_management'
+    ];
+    
+    const totalModules = MODULES.length;
+    let completed = 0;
+    
+    MODULES.forEach(module => {
+      if (formData[module] && Object.keys(formData[module]).length > 0) {
+        completed++;
+      }
+    });
+    
+    return Math.round((completed / totalModules) * 100);
   },
 };

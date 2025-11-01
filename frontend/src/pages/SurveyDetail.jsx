@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2, FiCloud, FiCloudOff } from 'react-icons/fi';
 import { useTranslation } from 'react-i18next';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
@@ -23,21 +23,98 @@ const SurveyDetail = () => {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const formDataRef = useRef(formData);
 
+  // Keep formDataRef in sync with formData
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  // Load survey data (including drafts) on mount
   useEffect(() => {
     if (survey) {
-      setFormData({
-        village_name: survey.village_name || '',
-        basic_info: survey.basic_info || {},
-        infrastructure: survey.infrastructure || {},
-        sanitation: survey.sanitation || {},
-        connectivity: survey.connectivity || {},
-        land_forest: survey.land_forest || {},
-        electricity: survey.electricity || {},
-        waste_management: survey.waste_management || {},
-      });
+      const loadData = async () => {
+        // Try to load draft first
+        const draft = await surveyService.loadDraft(surveyId);
+        
+        if (draft && draft.last_auto_save) {
+          // Use draft if it exists and has auto-save timestamp
+          console.log('📂 Restoring draft from:', new Date(draft.last_auto_save).toLocaleString());
+          setFormData({
+            village_name: draft.village_name || '',
+            basic_info: draft.basic_info || {},
+            infrastructure: draft.infrastructure || {},
+            sanitation: draft.sanitation || {},
+            connectivity: draft.connectivity || {},
+            land_forest: draft.land_forest || {},
+            electricity: draft.electricity || {},
+            waste_management: draft.waste_management || {},
+          });
+          setLastAutoSave(draft.last_auto_save);
+          toast.success('Draft restored from auto-save', { icon: '📂' });
+        } else {
+          // Use survey data
+          setFormData({
+            village_name: survey.village_name || '',
+            basic_info: survey.basic_info || {},
+            infrastructure: survey.infrastructure || {},
+            sanitation: survey.sanitation || {},
+            connectivity: survey.connectivity || {},
+            land_forest: survey.land_forest || {},
+            electricity: survey.electricity || {},
+            waste_management: survey.waste_management || {},
+          });
+        }
+      };
+      
+      loadData();
     }
-  }, [survey]);
+  }, [survey, surveyId]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const startAutoSave = () => {
+      // Clear any existing timer
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+
+      // Set up new auto-save timer (30 seconds)
+      autoSaveTimerRef.current = setInterval(async () => {
+        if (!surveyId) return;
+        
+        try {
+          setAutoSaving(true);
+          const result = await surveyService.autoSaveDraft(surveyId, formDataRef.current);
+          
+          if (result.success) {
+            setLastAutoSave(result.timestamp);
+            console.log('✅ Auto-save completed at:', new Date(result.timestamp).toLocaleString());
+          }
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        } finally {
+          setAutoSaving(false);
+        }
+      }, 30000); // 30 seconds
+
+      console.log('⏱️ Auto-save timer started (30s interval)');
+    };
+
+    // Start auto-save when component mounts
+    startAutoSave();
+
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+        console.log('⏱️ Auto-save timer cleared');
+      }
+    };
+  }, [surveyId]);
 
   const handleModuleDataChange = (moduleId, data) => {
     setFormData(prev => ({
@@ -60,27 +137,23 @@ const SurveyDetail = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const completionPercentage = calculateCompletion();
-      const updatedData = {
-        ...formData,
-        completion_percentage: completionPercentage,
-        is_complete: completionPercentage === 100,
-        client_timestamp: new Date().toISOString(),
-      };
-
-      await surveyService.updateSurvey(surveyId, updatedData);
+      const result = await surveyService.manualSave(surveyId, formData);
       
-      if (isOnline) {
-        toast.success(t('survey:detail.saved_synced'));
+      if (result.synced) {
+        toast.success(t('survey:detail.saved_synced'), { icon: '☁️' });
       } else {
-        toast.success(t('survey:detail.saved_local'));
+        toast.success(t('survey:detail.saved_local'), { icon: '💾' });
       }
+      
+      // Update last save time
+      setLastAutoSave(new Date().toISOString());
     } catch (error) {
       if (error.response?.status === 409) {
         toast.error(t('survey:detail.conflict_error'));
       } else {
         toast.error(t('survey:detail.save_error'));
       }
+      console.error('Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -148,14 +221,32 @@ const SurveyDetail = () => {
                 </h1>
                 {!isOnline && (
                   <span className="badge badge-warning gap-2">
-                    <span className="w-2 h-2 bg-warning rounded-full animate-pulse"></span>
+                    <FiCloudOff className="w-3 h-3" />
                     {t('survey:detail.offline')}
                   </span>
                 )}
+                {isOnline && (
+                  <span className="badge badge-success gap-2">
+                    <FiCloud className="w-3 h-3" />
+                    {t('survey:detail.online')}
+                  </span>
+                )}
+                {autoSaving && (
+                  <span className="badge badge-info gap-2">
+                    <span className="loading loading-spinner loading-xs"></span>
+                    {t('survey:detail.auto_saving')}
+                  </span>
+                )}
               </div>
-              <p className="text-base-content/60">
-                {panchayat?.name} • {t('survey:detail.created')} {new Date(survey.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-4 text-base-content/60">
+                <span>{panchayat?.name} • {t('survey:detail.created')} {new Date(survey.created_at).toLocaleDateString()}</span>
+                {lastAutoSave && (
+                  <span className="text-sm flex items-center gap-1">
+                    <FiClock className="w-3 h-3" />
+                    {t('survey:detail.last_saved')}: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-3">
               <motion.button
@@ -196,12 +287,18 @@ const SurveyDetail = () => {
                 <span className="font-semibold">{t('survey:detail.overall_progress')}</span>
                 {!isOnline && (
                   <span className="badge badge-sm badge-warning gap-1">
+                    <FiCloudOff className="w-3 h-3" />
                     {t('survey:detail.offline_mode')}
                   </span>
                 )}
                 {survey.synced === false && (
                   <span className="badge badge-sm badge-info gap-1">
                     {t('survey:detail.unsynced_changes')}
+                  </span>
+                )}
+                {survey.is_draft && (
+                  <span className="badge badge-sm badge-accent gap-1">
+                    {t('survey:detail.draft')}
                   </span>
                 )}
               </div>
@@ -213,9 +310,16 @@ const SurveyDetail = () => {
               max="100"
             ></progress>
             <div className="flex items-center justify-between mt-3 text-sm">
-              <div className="flex items-center text-base-content/60">
-                <FiClock className="mr-1" />
-                {t('survey:detail.last_updated')}: {new Date(survey.updated_at).toLocaleString()}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center text-base-content/60">
+                  <FiClock className="mr-1" />
+                  {t('survey:detail.last_updated')}: {new Date(survey.updated_at).toLocaleString()}
+                </div>
+                {lastAutoSave && (
+                  <div className="flex items-center text-info gap-1">
+                    💾 {t('survey:detail.auto_saved')}: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </div>
+                )}
               </div>
               {completionPercentage === 100 && (
                 <div className="flex items-center text-success font-semibold">
@@ -224,6 +328,14 @@ const SurveyDetail = () => {
                 </div>
               )}
             </div>
+            {!isOnline && (
+              <div className="alert alert-warning mt-4">
+                <FiCloudOff />
+                <span className="text-sm">
+                  {t('survey:detail.offline_message')}
+                </span>
+              </div>
+            )}
           </Card>
         </motion.div>
 
