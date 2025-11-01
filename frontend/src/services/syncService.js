@@ -274,8 +274,14 @@ class SyncService {
    */
   async syncCreateSurvey(surveyData, localId) {
     try {
+      // Skip drafts - only sync finalized surveys
+      if (surveyData.is_draft) {
+        console.log('⏭️ Skipping draft survey (not finalized yet):', localId);
+        return { skipped: true, reason: 'draft' };
+      }
+
       // Remove local-only fields
-      const { id, local_id, synced, synced_at, ...cleanData } = surveyData;
+      const { id, local_id, synced, synced_at, is_draft, last_auto_save, ...cleanData } = surveyData;
 
       console.log('📤 Syncing survey to server:', {
         local_id: localId,
@@ -333,6 +339,12 @@ class SyncService {
    */
   async syncUpdateSurvey(surveyData, surveyId) {
     try {
+      // Skip drafts - only sync finalized surveys
+      if (surveyData.is_draft) {
+        console.log('⏭️ Skipping draft survey (not finalized yet):', surveyId);
+        return { skipped: true, reason: 'draft' };
+      }
+
       // If survey ID starts with "local_" or looks like a timestamp, it was never synced
       // We need to CREATE it instead of UPDATE
       if (!surveyId || surveyId.toString().startsWith('local_') || surveyId.toString().startsWith('SURVEY_')) {
@@ -341,7 +353,7 @@ class SyncService {
       }
 
       // Remove local-only fields
-      const { id, local_id, synced, synced_at, ...cleanData } = surveyData;
+      const { id, local_id, synced, synced_at, is_draft, last_auto_save, ...cleanData } = surveyData;
 
       // Call API directly (not through surveyService to avoid duplicate IndexedDB writes)
       const response = await api.put(`/api/surveys/${surveyId}`, cleanData);

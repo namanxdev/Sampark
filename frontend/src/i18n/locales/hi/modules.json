@@ -1,0 +1,139 @@
+{
+  "basic_info": {
+    "title": "बुनियादी जानकारी",
+    "description": "सामान्य गांव जनसांख्यिकी और घरेलू डेटा",
+    "total_households": "कुल परिवार",
+    "total_population": "कुल जनसंख्या",
+    "male_population": "पुरुष जनसंख्या",
+    "female_population": "महिला जनसंख्या",
+    "children_0_6": "बच्चे (0-6 वर्ष)",
+    "sc_population": "अनुसूचित जाति जनसंख्या",
+    "st_population": "अनुसूचित जनजाति जनसंख्या",
+    "literacy_rate": "साक्षरता दर (%)",
+    "bpl_families": "गरीबी रेखा से नीचे परिवार",
+    "village_area": "गांव का क्षेत्रफल (हेक्टेयर)"
+  },
+  
+  "infrastructure": {
+    "title": "बुनियादी ढांचा",
+    "description": "सड़कें, भवन और सार्वजनिक सुविधाएं",
+    "paved_roads": "पक्की सड़कें (किमी)",
+    "unpaved_roads": "कच्ची सड़कें (किमी)",
+    "public_buildings": "सार्वजनिक भवनों की संख्या",
+    "schools": "विद्यालयों की संख्या",
+    "primary_schools": "प्राथमिक विद्यालय",
+    "secondary_schools": "माध्यमिक विद्यालय",
+    "health_centers": "स्वास्थ्य केंद्र/अस्पताल",
+    "anganwadi_centers": "आंगनवाड़ी केंद्र",
+    "community_halls": "सामुदायिक भवन",
+    "playgrounds": "खेल के मैदान",
+    "libraries": "पुस्तकालय"
+  },
+  
+  "sanitation": {
+    "title": "स्वच्छता",
+    "description": "शौचालय सुविधाएं, जल निकासी और सीवरेज",
+    "individual_toilets": "व्यक्तिगत घरेलू शौचालय",
+    "community_toilets": "सामुदायिक/सार्वजनिक शौचालय",
+    "drainage_system": "जल निकासी प्रणाली उपलब्ध",
+    "sewerage_system": "सीवरेज प्रणाली उपलब्ध",
+    "open_defecation": "खुले में शौच मुक्त स्थिति",
+    "drainage_covered": "ढकी हुई नाली (मीटर)",
+    "drainage_open": "खुली नाली (मीटर)",
+    "solid_waste_mgmt": "ठोस अपशिष्ट प्रबंधन प्रणाली"
+  },
+  
+  "connectivity": {
+    "title": "कनेक्टिविटी",
+    "description": "इंटरनेट, मोबाइल नेटवर्क और परिवहन",
+    "internet_access": "इंटरनेट पहुंच उपलब्ध",
+    "mobile_network": "मोबाइल नेटवर्क कवरेज",
+    "broadband": "ब्रॉडबैंड कनेक्शन",
+    "common_service_center": "सामान्य सेवा केंद्र",
+    "public_transport": "सार्वजनिक परिवहन उपलब्ध",
+    "bus_service": "बस सेवा की आवृत्ति",
+    "railway_station": "रेलवे स्टेशन (किमी दूर)",
+    "paved_road_access": "सभी मौसम में सड़क पहुंच"
+  },
+  
+  "land_forest": {
+    "title": "भूमि और वन",
+    "description": "कृषि भूमि, वन और जल संसाधन",
+    "total_land": "कुल भूमि क्षेत्र (हेक्टेयर)",
+    "agricultural_land": "कृषि भूमि (हेक्टेयर)",
+    "irrigated_land": "सिंचित भूमि (हेक्टेयर)",
+    "forest_area": "वन क्षेत्र (हेक्टेयर)",
+    "waste_land": "बंजर भूमि (हेक्टेयर)",
+    "ponds": "तालाबों/झीलों की संख्या",
+    "wells": "कुओं की संख्या",
+    "tube_wells": "नलकूपों की संख्या",
+    "canals": "नहर सिंचाई (किमी)",
+    "grazing_land": "चराई भूमि (हेक्टेयर)"
+  },
+  
+  "electricity": {
+    "title": "बिजली",
+    "description": "बिजली आपूर्ति और विद्युतीकरण स्थिति",
+    "power_supply_hours": "बिजली आपूर्ति (घंटे/दिन)",
+    "electrified_households": "विद्युतीकृत परिवार",
+    "agricultural_connections": "कृषि कनेक्शन",
+    "commercial_connections": "वाणिज्यिक कनेक्शन",
+    "street_lights": "स्ट्रीट लाइटों की संख्या",
+    "solar_street_lights": "सोलर स्ट्रीट लाइट",
+    "solar_panels_installed": "सोलर पैनल वाले परिवार",
+    "power_cuts_frequency": "बिजली कटौती (प्रति सप्ताह)",
+    "transformer_capacity": "ट्रांसफार्मर क्षमता (KVA)"
+  },
+  
+  "waste_management": {
+    "title": "अपशिष्ट प्रबंधन",
+    "description": "संग्रह, पृथक्करण और निपटान प्रणाली",
+    "waste_collection": "अपशिष्ट संग्रहण प्रणाली",
+    "door_to_door": "घर-घर संग्रहण",
+    "collection_frequency": "संग्रहण की आवृत्ति",
+    "segregation_practiced": "स्रोत पर अपशिष्ट पृथक्करण",
+    "composting": "कम्पोस्टिंग सुविधा",
+    "recycling": "पुनर्चक्रण कार्यक्रम",
+    "disposal_method": "अपशिष्ट निपटान विधि",
+    "landfill_distance": "लैंडफिल दूरी (किमी)",
+    "biogas_plants": "बायोगैस संयंत्र",
+    "plastic_ban_enforced": "प्लास्टिक प्रतिबंध लागू"
+  },
+  
+  "options": {
+    "yes": "हाँ",
+    "no": "नहीं",
+    "partial": "आंशिक",
+    "not_available": "उपलब्ध नहीं",
+    "excellent": "उत्कृष्ट",
+    "good": "अच्छा",
+    "average": "औसत",
+    "poor": "खराब",
+    "daily": "दैनिक",
+    "weekly": "साप्ताहिक",
+    "fortnightly": "पाक्षिक",
+    "monthly": "मासिक",
+    "landfill": "लैंडफिल",
+    "composting": "कम्पोस्टिंग",
+    "open_dumping": "खुले में डंपिंग",
+    "burning": "जलाना",
+    "recycling": "पुनर्चक्रण"
+  },
+  
+  "placeholders": {
+    "enter_number": "संख्या दर्ज करें",
+    "enter_value": "मान दर्ज करें",
+    "select_option": "एक विकल्प चुनें"
+  },
+  
+  "units": {
+    "households": "परिवार",
+    "persons": "व्यक्ति",
+    "km": "किमी",
+    "hectares": "हेक्टेयर",
+    "meters": "मीटर",
+    "hours": "घंटे प्रति दिन",
+    "percent": "%",
+    "kva": "KVA"
+  }
+}

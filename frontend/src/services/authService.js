@@ -53,4 +53,14 @@ export const authService = {
     const panchayatInfo = localStorage.getItem('panchayat_info');
     return panchayatInfo ? JSON.parse(panchayatInfo) : null;
   },
+
+  async changePassword(currentPassword, newPassword) {
+    const response = await api.post('/api/auth/change-password', null, {
+      params: {
+        current_password: currentPassword,
+        new_password: newPassword
+      }
+    });
+    return response.data;
+  },
 };

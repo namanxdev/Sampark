@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2, FiChevronLeft, FiChevronRight, FiCloud, FiCloudOff } from 'react-icons/fi';
+import { useTranslation } from 'react-i18next';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useAuth } from '../context/AuthContext';
@@ -16,6 +17,7 @@ import toast from 'react-hot-toast';
 const SurveyDetail = () => {
   const { surveyId } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation(['survey', 'common']);
   const { panchayat, user } = useAuth();
   const { isOnline } = useSync();
   const { survey, loading } = useSurvey(surveyId);
@@ -24,21 +26,98 @@ const SurveyDetail = () => {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const formDataRef = useRef(formData);
 
+  // Keep formDataRef in sync with formData
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  // Load survey data (including drafts) on mount
   useEffect(() => {
     if (survey) {
-      setFormData({
-        village_name: survey.village_name || '',
-        basic_info: survey.basic_info || {},
-        infrastructure: survey.infrastructure || {},
-        sanitation: survey.sanitation || {},
-        connectivity: survey.connectivity || {},
-        land_forest: survey.land_forest || {},
-        electricity: survey.electricity || {},
-        waste_management: survey.waste_management || {},
-      });
+      const loadData = async () => {
+        // Try to load draft first
+        const draft = await surveyService.loadDraft(surveyId);
+        
+        if (draft && draft.last_auto_save) {
+          // Use draft if it exists and has auto-save timestamp
+          console.log('📂 Restoring draft from:', new Date(draft.last_auto_save).toLocaleString());
+          setFormData({
+            village_name: draft.village_name || '',
+            basic_info: draft.basic_info || {},
+            infrastructure: draft.infrastructure || {},
+            sanitation: draft.sanitation || {},
+            connectivity: draft.connectivity || {},
+            land_forest: draft.land_forest || {},
+            electricity: draft.electricity || {},
+            waste_management: draft.waste_management || {},
+          });
+          setLastAutoSave(draft.last_auto_save);
+          toast.success('Draft restored from auto-save', { icon: '📂' });
+        } else {
+          // Use survey data
+          setFormData({
+            village_name: survey.village_name || '',
+            basic_info: survey.basic_info || {},
+            infrastructure: survey.infrastructure || {},
+            sanitation: survey.sanitation || {},
+            connectivity: survey.connectivity || {},
+            land_forest: survey.land_forest || {},
+            electricity: survey.electricity || {},
+            waste_management: survey.waste_management || {},
+          });
+        }
+      };
+      
+      loadData();
     }
-  }, [survey]);
+  }, [survey, surveyId]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const startAutoSave = () => {
+      // Clear any existing timer
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+
+      // Set up new auto-save timer (30 seconds)
+      autoSaveTimerRef.current = setInterval(async () => {
+        if (!surveyId) return;
+        
+        try {
+          setAutoSaving(true);
+          const result = await surveyService.autoSaveDraft(surveyId, formDataRef.current);
+          
+          if (result.success) {
+            setLastAutoSave(result.timestamp);
+            console.log('✅ Auto-save completed at:', new Date(result.timestamp).toLocaleString());
+          }
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        } finally {
+          setAutoSaving(false);
+        }
+      }, 30000); // 30 seconds
+
+      console.log('⏱️ Auto-save timer started (30s interval)');
+    };
+
+    // Start auto-save when component mounts
+    startAutoSave();
+
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+        console.log('⏱️ Auto-save timer cleared');
+      }
+    };
+  }, [surveyId]);
 
   const handleModuleDataChange = (moduleId, data) => {
     setFormData(prev => ({
@@ -58,27 +137,23 @@ const SurveyDetail = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const completionPercentage = calculateCompletion();
-      const updatedData = {
-        ...formData,
-        completion_percentage: completionPercentage,
-        is_complete: completionPercentage === 100,
-        client_timestamp: new Date().toISOString(),
-      };
-
-      await surveyService.updateSurvey(surveyId, updatedData);
+      const result = await surveyService.manualSave(surveyId, formData);
       
-      if (isOnline) {
-        toast.success('Survey saved and synced successfully!');
+      if (result.synced) {
+        toast.success(t('survey:detail.saved_synced'), { icon: '☁️' });
       } else {
-        toast.success('Survey saved locally. Will sync when online.');
+        toast.success(t('survey:detail.saved_local'), { icon: '💾' });
       }
+      
+      // Update last save time
+      setLastAutoSave(new Date().toISOString());
     } catch (error) {
       if (error.response?.status === 409) {
-        toast.error('Conflict detected! Please resolve conflicts before saving.');
+        toast.error(t('survey:detail.conflict_error'));
       } else {
-        toast.error('Failed to save survey');
+        toast.error(t('survey:detail.save_error'));
       }
+      console.error('Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -87,8 +162,8 @@ const SurveyDetail = () => {
   const handleDelete = async () => {
     // Confirmation dialog
     const confirmMessage = isOnline 
-      ? 'Are you sure you want to delete this survey? This action cannot be undone.'
-      : 'You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?';
+      ? t('survey:detail.delete_confirm')
+      : t('survey:detail.delete_offline_confirm');
     
     if (!window.confirm(confirmMessage)) {
       return;
@@ -99,9 +174,9 @@ const SurveyDetail = () => {
       await surveyService.deleteSurvey(surveyId);
       
       if (isOnline) {
-        toast.success('Survey deleted successfully!');
+        toast.success(t('survey:detail.deleted_success'));
       } else {
-        toast.success('Survey deleted locally. Will sync deletion when online.');
+        toast.success(t('survey:detail.deleted_local'));
       }
       
       // Navigate back to surveys list after short delay
@@ -110,14 +185,14 @@ const SurveyDetail = () => {
       }, 500);
     } catch (error) {
       console.error('Delete error:', error);
-      toast.error('Failed to delete survey. Please try again.');
+      toast.error(t('survey:detail.delete_error'));
     } finally {
       setDeleting(false);
     }
   };
 
   if (loading) return <LoadingSpinner fullScreen />;
-  if (!survey) return <div>Survey not found</div>;
+  if (!survey) return <div>{t('survey:detail.not_found')}</div>;
 
   const completionPercentage = calculateCompletion();
 
@@ -135,25 +210,43 @@ const SurveyDetail = () => {
             className="btn btn-ghost mb-4"
           >
             <FiArrowLeft className="mr-2" />
-            Back to Surveys
+            {t('survey:detail.back_to_surveys')}
           </button>
 
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-4xl font-bold text-base-content">
-                  {formData.village_name || 'Untitled Survey'}
+                  {formData.village_name || t('survey:detail.untitled_survey')}
                 </h1>
                 {!isOnline && (
                   <span className="badge badge-warning gap-2">
-                    <span className="w-2 h-2 bg-warning rounded-full animate-pulse"></span>
-                    Offline
+                    <FiCloudOff className="w-3 h-3" />
+                    {t('survey:detail.offline')}
+                  </span>
+                )}
+                {isOnline && (
+                  <span className="badge badge-success gap-2">
+                    <FiCloud className="w-3 h-3" />
+                    {t('survey:detail.online')}
+                  </span>
+                )}
+                {autoSaving && (
+                  <span className="badge badge-info gap-2">
+                    <span className="loading loading-spinner loading-xs"></span>
+                    {t('survey:detail.auto_saving')}
                   </span>
                 )}
               </div>
-              <p className="text-base-content/60">
-                {panchayat?.name} • Created {new Date(survey.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-4 text-base-content/60">
+                <span>{panchayat?.name} • {t('survey:detail.created')} {new Date(survey.created_at).toLocaleDateString()}</span>
+                {lastAutoSave && (
+                  <span className="text-sm flex items-center gap-1">
+                    <FiClock className="w-3 h-3" />
+                    {t('survey:detail.last_saved')}: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-3">
               <motion.button
@@ -162,10 +255,10 @@ const SurveyDetail = () => {
                 onClick={handleDelete}
                 className={`btn btn-error btn-outline ${deleting ? 'loading' : ''}`}
                 disabled={deleting || saving}
-                title={isOnline ? 'Delete survey' : 'Delete locally (will sync when online)'}
+                title={isOnline ? t('survey:actions.delete_survey') : t('survey:detail.save_local')}
               >
                 {!deleting && <FiTrash2 className="mr-2" />}
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('survey:detail.deleting') : t('survey:detail.delete')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -173,10 +266,10 @@ const SurveyDetail = () => {
                 onClick={handleSave}
                 className={`btn btn-primary ${saving ? 'loading' : ''}`}
                 disabled={saving || deleting}
-                title={isOnline ? 'Save and sync' : 'Save locally (will sync when online)'}
+                title={isOnline ? t('survey:detail.save_sync') : t('survey:detail.save_local')}
               >
                 {!saving && <FiSave className="mr-2" />}
-                {saving ? 'Saving...' : 'Save Survey'}
+                {saving ? t('survey:detail.saving') : t('survey:detail.save_survey')}
               </motion.button>
             </div>
           </div>
@@ -191,15 +284,21 @@ const SurveyDetail = () => {
           <Card className="mb-6">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
-                <span className="font-semibold">Overall Progress</span>
+                <span className="font-semibold">{t('survey:detail.overall_progress')}</span>
                 {!isOnline && (
                   <span className="badge badge-sm badge-warning gap-1">
-                    Offline Mode
+                    <FiCloudOff className="w-3 h-3" />
+                    {t('survey:detail.offline_mode')}
                   </span>
                 )}
                 {survey.synced === false && (
                   <span className="badge badge-sm badge-info gap-1">
-                    Unsynced Changes
+                    {t('survey:detail.unsynced_changes')}
+                  </span>
+                )}
+                {survey.is_draft && (
+                  <span className="badge badge-sm badge-accent gap-1">
+                    {t('survey:detail.draft')}
                   </span>
                 )}
               </div>
@@ -214,30 +313,43 @@ const SurveyDetail = () => {
               {completionStats.filledFields} / {completionStats.totalFields} fields completed
             </div>
             <div className="flex items-center justify-between mt-3 text-sm">
-              <div className="flex items-center text-base-content/60">
-                <FiClock className="mr-1" />
-                Last updated: {new Date(survey.updated_at).toLocaleString()}
-              </div>
-              <div className="flex items-center gap-3">
-                {completionPercentage === 100 && (
-                  <>
-                    <div className="flex items-center text-success font-semibold">
-                      <FiCheckCircle className="mr-1" />
-                      Complete
-                    </div>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => setShowPreview(true)}
-                      className="btn btn-success btn-sm gap-2"
-                    >
-                      <FiCheckCircle />
-                      Preview & Submit
-                    </motion.button>
-                  </>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center text-base-content/60">
+                  <FiClock className="mr-1" />
+                  {t('survey:detail.last_updated')}: {new Date(survey.updated_at).toLocaleString()}
+                </div>
+                {lastAutoSave && (
+                  <div className="flex items-center text-info gap-1">
+                    💾 {t('survey:detail.auto_saved')}: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </div>
                 )}
               </div>
+              {completionPercentage === 100 && (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center text-success font-semibold">
+                    <FiCheckCircle className="mr-1" />
+                    {t('common:status.complete')}
+                  </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowPreview(true)}
+                    className="btn btn-success btn-sm gap-2"
+                  >
+                    <FiCheckCircle />
+                    {t('survey:detail.preview_submit')}
+                  </motion.button>
+                </div>
+              )}
             </div>
+            {!isOnline && (
+              <div className="alert alert-warning mt-4">
+                <FiCloudOff />
+                <span className="text-sm">
+                  {t('survey:detail.offline_message')}
+                </span>
+              </div>
+            )}
           </Card>
         </motion.div>
 
@@ -250,7 +362,7 @@ const SurveyDetail = () => {
             transition={{ delay: 0.2 }}
           >
             <Card>
-              <h3 className="text-lg font-bold mb-4">Survey Modules</h3>
+              <h3 className="text-lg font-bold mb-4">{t('survey:detail.survey_modules')}</h3>
               <div className="space-y-2">
                 {SURVEY_MODULES.map((module) => {
                   const isComplete = formData[module.id] && Object.keys(formData[module.id]).length > 0;
@@ -268,7 +380,7 @@ const SurveyDetail = () => {
                       `}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{module.name}</span>
+                        <span className="text-sm font-medium">{t(`survey:modules.${module.id}`)}</span>
                         {isComplete && (
                           <FiCheckCircle className={activeModule === module.id ? 'text-white' : 'text-success'} />
                         )}
@@ -289,7 +401,7 @@ const SurveyDetail = () => {
           >
             <Card>
               <h2 className="text-2xl font-bold mb-6">
-                {SURVEY_MODULES.find(m => m.id === activeModule)?.name}
+                {t(`survey:modules.${activeModule}`)}
               </h2>
               <ModuleForm
                 moduleId={activeModule}
@@ -337,6 +449,7 @@ const SurveyDetail = () => {
   );
 };
 
+<<<<<<< HEAD
 // ✅ NEW: Preview Modal Component
 const PreviewModal = ({ formData, onClose, onSubmit, surveyId }) => {
   const [submitting, setSubmitting] = useState(false);
@@ -460,11 +573,37 @@ const PreviewModal = ({ formData, onClose, onSubmit, surveyId }) => {
 // ✅ UPDATED: Enhanced Module Form with Navigation and Validation
 const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isLast, allFormData, onSave }) => {
   const [validationErrors, setValidationErrors] = useState([]);
+=======
+// Dynamic form component for each module
+const ModuleForm = ({ moduleId, data, onChange }) => {
+  const { t } = useTranslation(['survey', 'common']);
+>>>>>>> main
   
   const handleInputChange = (field, value) => {
+    // For number inputs, validate min/max constraints
+    if (field.type === 'number' && value !== '') {
+      const numValue = Number(value);
+      
+      // Check if value exceeds maximum
+      if (field.max !== undefined && numValue > field.max) {
+        toast.error(t('survey:validation.max_value', { label: field.label, max: field.max }), {
+          position: 'top-center'
+        });
+        return; // Don't update the value
+      }
+      
+      // Check if value is below minimum
+      if (field.min !== undefined && numValue < field.min) {
+        toast.error(t('survey:validation.min_value', { label: field.label, min: field.min }), {
+          position: 'top-center'
+        });
+        return; // Don't update the value
+      }
+    }
+    
     onChange({
       ...data,
-      [field]: value
+      [field.name]: value
     });
     // Clear validation errors when user types
     if (validationErrors.length > 0) {
@@ -478,7 +617,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
     
     if (!validation.isValid) {
       setValidationErrors(validation.errors);
-      toast.error(`Please fill all required fields in ${SURVEY_MODULES.find(m => m.id === moduleId)?.name}`);
+      toast.error(t('survey:detail.fill_required_fields'));
       return;
     }
     
@@ -503,13 +642,13 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
     
     if (!validation.isValid) {
       setValidationErrors(validation.errors);
-      toast.error('Please fill all required fields before finishing');
+      toast.error(t('survey:detail.fill_required_before_finish'));
       return;
     }
     
     // Save and show success
     onSave();
-    toast.success('🎉 Survey completed! All data saved.');
+    toast.success(t('survey:detail.survey_completed'));
   };
 
   // Get fields from the centralized configuration
@@ -531,7 +670,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
       <div className="alert alert-info">
         <div className="flex items-center justify-between w-full">
           <span className="font-medium">
-            📝 {filledFields} / {fields.length} fields completed
+            📝 {filledFields} / {fields.length} {t('survey:detail.fields_completed')}
           </span>
           <span className="badge badge-success badge-lg">{moduleCompletion}%</span>
         </div>
@@ -541,7 +680,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
       {validationErrors.length > 0 && (
         <div className="alert alert-error">
           <div>
-            <h3 className="font-bold">Please fix the following errors:</h3>
+            <h3 className="font-bold">{t('survey:detail.fix_errors')}:</h3>
             <ul className="list-disc list-inside mt-2">
               {validationErrors.map((error, index) => (
                 <li key={index}>{error}</li>
@@ -561,7 +700,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
                 {field.required && <span className="text-error ml-1">*</span>}
               </span>
               {!field.required && (
-                <span className="label-text-alt text-base-content/50">Optional</span>
+                <span className="label-text-alt text-base-content/50">{t('survey:form.optional')}</span>
               )}
             </label>
             {field.type === 'textarea' ? (
@@ -577,7 +716,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
                 value={data[field.name] || ''}
                 onChange={(e) => handleInputChange(field.name, e.target.value)}
               >
-                <option value="">Select {field.label}</option>
+                <option value="">{t('survey:detail.select')} {field.label}</option>
                 {field.options?.map(opt => (
                   <option key={opt} value={opt}>{opt}</option>
                 ))}
@@ -589,6 +728,9 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
                 value={data[field.name] || ''}
                 onChange={(e) => handleInputChange(field.name, e.target.value)}
                 placeholder={field.placeholder}
+                min={field.min}
+                max={field.max}
+                step={field.step}
               />
             )}
           </div>
@@ -606,12 +748,12 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
           className="btn btn-outline gap-2"
         >
           <FiChevronLeft />
-          Previous
+          {t('survey:detail.previous')}
         </motion.button>
 
         <div className="text-center">
           <p className="text-sm text-base-content/60">
-            Module {SURVEY_MODULES.findIndex(m => m.id === moduleId) + 1} of {SURVEY_MODULES.length}
+            {t('survey:detail.module')} {SURVEY_MODULES.findIndex(m => m.id === moduleId) + 1} {t('survey:detail.of')} {SURVEY_MODULES.length}
           </p>
         </div>
 
@@ -622,7 +764,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
             onClick={handleNext}
             className="btn btn-primary gap-2"
           >
-            Next
+            {t('survey:detail.next')}
             <FiChevronRight />
           </motion.button>
         ) : (
@@ -633,7 +775,7 @@ const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isL
             className="btn btn-success gap-2"
           >
             <FiCheckCircle />
-            Finish
+            {t('survey:detail.finish')}
           </motion.button>
         )}
       </div>

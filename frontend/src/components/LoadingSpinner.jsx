@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 const LoadingSpinner = ({ size = 'md', fullScreen = false }) => {
+  const { t } = useTranslation('common');
   const sizeClasses = {
     sm: 'loading-sm',
     md: 'loading-md',
@@ -16,7 +18,7 @@ const LoadingSpinner = ({ size = 'md', fullScreen = false }) => {
           className="text-center"
         >
           <span className={`loading loading-spinner loading-lg text-primary`}></span>
-          <p className="mt-4 text-lg font-medium text-base-content">Loading...</p>
+          <p className="mt-4 text-lg font-medium text-base-content">{t('messages.loading')}</p>
         </motion.div>
       </div>
     );

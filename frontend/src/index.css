@@ -1,3 +1,30 @@
 @import 'tailwindcss';
 @plugin "daisyui";
 
+/* Auto-switch white text to black in light mode */
+[data-theme="light"] .text-white,
+[data-theme="light"] .text-white *,
+[data-theme="light"] [class*="text-white"] {
+  color: #000 !important;
+}
+
+/* Handle inline styles with white color */
+[data-theme="light"] [style*="color: white"],
+[data-theme="light"] [style*="color: #fff"],
+[data-theme="light"] [style*="color: #FFF"],
+[data-theme="light"] [style*="color:#fff"],
+[data-theme="light"] [style*="color:#FFF"],
+[data-theme="light"] [style*="color:white"] {
+  color: #000 !important;
+}
+
+/* Ensure Navbar text is visible in both modes */
+[data-theme="light"] nav .text-white {
+  color: #000 !important;
+}
+
+[data-theme="dark"] nav .text-white {
+  color: #fff !important;
+}
+
+

@@ -4,12 +4,14 @@ import { useAuth } from '../context/AuthContext';
 import { useSurveys } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import StatCard from '../components/StatCard';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
+  const { t } = useTranslation('common');
   const { user, panchayat } = useAuth();
   const { surveys, loading } = useSurveys(panchayat?.panchayat_id);
   const [syncStatus, setSyncStatus] = useState(null);
@@ -44,10 +46,10 @@ const Dashboard = () => {
           className="mb-8"
         >
           <h1 className="text-4xl font-bold text-base-content mb-2">
-            Welcome back, {user?.full_name || user?.username}! 👋
+            {t('dashboard.welcome', { name: user?.full_name || user?.username })}
           </h1>
           <p className="text-base-content/60">
-            {panchayat ? `${panchayat.name}, ${panchayat.district}` : 'Your Dashboard Overview'}
+            {panchayat ? t('dashboard.panchayat_info', { name: panchayat.name, district: panchayat.district }) : t('dashboard.overview')}
           </p>
         </motion.div>
 
@@ -59,7 +61,7 @@ const Dashboard = () => {
             transition={{ delay: 0.1 }}
           >
             <StatCard
-              title="Total Surveys"
+              title={t('dashboard.total_surveys')}
               value={surveys.length}
               icon={<FiFileText />}
               color="primary"
@@ -72,7 +74,7 @@ const Dashboard = () => {
             transition={{ delay: 0.2 }}
           >
             <StatCard
-              title="Completed"
+              title={t('dashboard.completed')}
               value={completedSurveys}
               icon={<FiCheckCircle />}
               color="success"
@@ -85,7 +87,7 @@ const Dashboard = () => {
             transition={{ delay: 0.3 }}
           >
             <StatCard
-              title="In Progress"
+              title={t('dashboard.in_progress')}
               value={pendingSurveys}
               icon={<FiClock />}
               color="warning"
@@ -117,18 +119,18 @@ const Dashboard = () => {
           >
             <Card>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold">Recent Surveys</h2>
+                <h2 className="text-2xl font-bold">{t('dashboard.recent_surveys')}</h2>
                 <Link to="/surveys" className="btn btn-primary btn-sm">
-                  View All
+                  {t('dashboard.view_all_surveys')}
                 </Link>
               </div>
 
               {surveys.length === 0 ? (
                 <div className="text-center py-12">
                   <FiFileText className="mx-auto text-6xl text-base-content/20 mb-4" />
-                  <p className="text-base-content/60 mb-4">No surveys yet</p>
+                  <p className="text-base-content/60 mb-4">{t('dashboard.no_surveys')}</p>
                   <Link to="/surveys/new" className="btn btn-primary">
-                    Create Your First Survey
+                    {t('dashboard.create_new_survey')}
                   </Link>
                 </div>
               ) : (
@@ -151,7 +153,7 @@ const Dashboard = () => {
                             {survey.completion_percentage}%
                           </div>
                           <span className={`badge ${survey.is_complete ? 'badge-success' : 'badge-warning'}`}>
-                            {survey.is_complete ? 'Complete' : 'In Progress'}
+                            {survey.is_complete ? t('dashboard.completed') : t('dashboard.in_progress')}
                           </span>
                         </div>
                       </motion.div>
@@ -171,7 +173,7 @@ const Dashboard = () => {
           >
             {/* Quick Actions */}
             <Card gradient>
-              <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
+              <h3 className="text-xl font-bold mb-4">{t('dashboard.quick_actions')}</h3>
               <div className="space-y-3">
                 <Link to="/surveys/new">
                   <motion.button
@@ -180,7 +182,7 @@ const Dashboard = () => {
                     className="btn btn-primary w-full"
                   >
                     <FiFileText className="mr-2" />
-                    New Survey
+                    {t('dashboard.create_new_survey')}
                   </motion.button>
                 </Link>
                 <Link to="/surveys">
@@ -189,7 +191,7 @@ const Dashboard = () => {
                     whileTap={{ scale: 0.98 }}
                     className="btn btn-outline w-full"
                   >
-                    View All Surveys
+                    {t('dashboard.view_all_surveys')}
                   </motion.button>
                 </Link>
               </div>

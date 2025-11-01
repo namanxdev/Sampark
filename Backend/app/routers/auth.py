@@ -131,3 +131,34 @@ async def logout():
     Logout endpoint (token invalidation handled on client side)
     """
     return {"message": "Successfully logged out"}
+
+
+@router.post("/change-password")
+async def change_password(
+    current_password: str,
+    new_password: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Change user password
+    
+    Requires:
+    - current_password: Current password for verification
+    - new_password: New password to set
+    """
+    # Verify current password
+    if not verify_password(current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Current password is incorrect"
+        )
+    
+    # Hash new password
+    new_hashed_password = get_password_hash(new_password)
+    
+    # Update password in database
+    current_user.hashed_password = new_hashed_password
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
