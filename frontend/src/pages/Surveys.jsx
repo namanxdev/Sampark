@@ -176,16 +176,14 @@ const Surveys = () => {
               // Use survey_id, local_id, or IndexedDB id as the identifier (priority order)
               const surveyIdentifier = survey.survey_id || survey.local_id || survey.id;
               
-              // Determine sync status badge
+              // Determine sync status badge based on completion percentage
               const getSyncStatus = () => {
-                if (!isOnline) {
-                  return { label: 'offline', color: 'badge-warning' };
-                } else if (survey.synced === false || survey.sync_status === 'pending') {
-                  return { label: 'pending', color: 'badge-warning' };
-                } else if (survey.sync_status === 'synced' || survey.synced === true) {
-                  return { label: 'synced', color: 'badge-success' };
+                const completionPercentage = survey.completion_percentage || 0;
+                
+                if (completionPercentage === 100) {
+                  return { label: 'completed', color: 'badge-success' };
                 } else {
-                  return { label: survey.sync_status || 'pending', color: STATUS_COLORS[survey.sync_status || 'pending'] };
+                  return { label: 'pending', color: 'badge-warning' };
                 }
               };
               const syncStatus = getSyncStatus();
