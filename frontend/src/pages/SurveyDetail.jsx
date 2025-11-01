@@ -291,9 +291,30 @@ const SurveyDetail = () => {
 // Dynamic form component for each module
 const ModuleForm = ({ moduleId, data, onChange }) => {
   const handleInputChange = (field, value) => {
+    // For number inputs, validate min/max constraints
+    if (field.type === 'number' && value !== '') {
+      const numValue = Number(value);
+      
+      // Check if value exceeds maximum
+      if (field.max !== undefined && numValue > field.max) {
+        toast.error(`Maximum value for ${field.label} is ${field.max}`, {
+          position: 'top-center'
+        });
+        return; // Don't update the value
+      }
+      
+      // Check if value is below minimum
+      if (field.min !== undefined && numValue < field.min) {
+        toast.error(`Minimum value for ${field.label} is ${field.min}`, {
+          position: 'top-center'
+        });
+        return; // Don't update the value
+      }
+    }
+    
     onChange({
       ...data,
-      [field]: value
+      [field.name]: value
     });
   };
 
@@ -312,14 +333,14 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
             <textarea
               className="textarea textarea-bordered h-24"
               value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
+              onChange={(e) => handleInputChange(field, e.target.value)}
               placeholder={field.placeholder}
             />
           ) : field.type === 'select' ? (
             <select
               className="select select-bordered"
               value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
+              onChange={(e) => handleInputChange(field, e.target.value)}
             >
               <option value="">Select {field.label}</option>
               {field.options?.map(opt => (
@@ -331,8 +352,11 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
               type={field.type || 'text'}
               className="input input-bordered"
               value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
+              onChange={(e) => handleInputChange(field, e.target.value)}
               placeholder={field.placeholder}
+              min={field.min}
+              max={field.max}
+              step={field.step}
             />
           )}
         </div>
@@ -345,19 +369,19 @@ const ModuleForm = ({ moduleId, data, onChange }) => {
 const getFieldsForModule = (moduleId) => {
   const fieldSets = {
     basic_info: [
-      { name: 'population', label: 'Population', type: 'number', placeholder: 'Enter total population', required: true },
-      { name: 'households', label: 'Number of Households', type: 'number', placeholder: 'Enter number of households', required: true },
-      { name: 'literacy_rate', label: 'Literacy Rate (%)', type: 'number', placeholder: 'Enter literacy rate', required: false },
+      { name: 'population', label: 'Population', type: 'number', placeholder: 'Enter total population', required: true, min: 1, max: 99999, step: 1 },
+      { name: 'households', label: 'Number of Households', type: 'number', placeholder: 'Enter number of households', required: true, min: 1, max: 9999, step: 1 },
+      { name: 'literacy_rate', label: 'Literacy Rate (%)', type: 'number', placeholder: 'Enter literacy rate', required: false, min: 0, max: 100, step: 0.1 },
       { name: 'primary_occupation', label: 'Primary Occupation', type: 'select', options: ['Agriculture', 'Business', 'Service', 'Labor', 'Other'], required: false },
     ],
     infrastructure: [
       { name: 'roads', label: 'Road Conditions', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor'], required: true },
-      { name: 'schools', label: 'Number of Schools', type: 'number', placeholder: 'Enter number of schools', required: true },
-      { name: 'hospitals', label: 'Number of Health Centers', type: 'number', placeholder: 'Enter number of health centers', required: true },
-      { name: 'community_centers', label: 'Community Centers', type: 'number', placeholder: 'Enter number of community centers', required: false },
+      { name: 'schools', label: 'Number of Schools', type: 'number', placeholder: 'Enter number of schools', required: true, min: 0, max: 200, step: 1 },
+      { name: 'hospitals', label: 'Number of Health Centers', type: 'number', placeholder: 'Enter number of health centers', required: true, min: 0, max: 50, step: 1 },
+      { name: 'community_centers', label: 'Community Centers', type: 'number', placeholder: 'Enter number of community centers', required: false, min: 0, max: 100, step: 1 },
     ],
     sanitation: [
-      { name: 'toilets', label: 'Household Toilets Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true },
+      { name: 'toilets', label: 'Household Toilets Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true, min: 0, max: 100, step: 1 },
       { name: 'drainage', label: 'Drainage System', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
       { name: 'water_supply', label: 'Water Supply Status', type: 'select', options: ['24x7', 'Scheduled', 'Limited', 'Insufficient'], required: true },
     ],
@@ -367,13 +391,13 @@ const getFieldsForModule = (moduleId) => {
       { name: 'transport', label: 'Public Transport', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
     ],
     land_forest: [
-      { name: 'agricultural_land', label: 'Agricultural Land (acres)', type: 'number', placeholder: 'Enter area in acres', required: true },
-      { name: 'forest_area', label: 'Forest Area (acres)', type: 'number', placeholder: 'Enter area in acres', required: false },
+      { name: 'agricultural_land', label: 'Agricultural Land (acres)', type: 'number', placeholder: 'Enter area in acres', required: true, min: 0, max: 50000, step: 1 },
+      { name: 'forest_area', label: 'Forest Area (acres)', type: 'number', placeholder: 'Enter area in acres', required: false, min: 0, max: 100000, step: 1 },
       { name: 'irrigation', label: 'Irrigation Facilities', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
     ],
     electricity: [
-      { name: 'coverage', label: 'Electricity Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true },
-      { name: 'supply_hours', label: 'Average Supply Hours/Day', type: 'number', placeholder: 'Enter hours', required: true },
+      { name: 'coverage', label: 'Electricity Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true, min: 0, max: 100, step: 1 },
+      { name: 'supply_hours', label: 'Average Supply Hours/Day', type: 'number', placeholder: 'Enter hours', required: true, min: 0, max: 24, step: 0.5 },
       { name: 'street_lights', label: 'Street Light Coverage', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: false },
     ],
     waste_management: [

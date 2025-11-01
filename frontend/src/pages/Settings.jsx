@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FiUser, FiLock, FiBell, FiGlobe, FiSave } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/authService';
 import Card from '../components/Card';
 import toast from 'react-hot-toast';
 
@@ -190,14 +191,46 @@ const SecuritySettings = () => {
     new: '',
     confirm: '',
   });
+  const [loading, setLoading] = useState(false);
 
-  const handleChangePassword = () => {
-    if (passwords.new !== passwords.confirm) {
-      toast.error('Passwords do not match');
+  const handleChangePassword = async () => {
+    // Validation
+    if (!passwords.current || !passwords.new || !passwords.confirm) {
+      toast.error('Please fill in all password fields', {
+        position: 'top-center'
+      });
       return;
     }
-    toast.success('Password changed successfully!');
-    setPasswords({ current: '', new: '', confirm: '' });
+
+    if (passwords.new !== passwords.confirm) {
+      toast.error('New passwords do not match', {
+        position: 'top-center'
+      });
+      return;
+    }
+
+    if (passwords.new.length < 6) {
+      toast.error('New password must be at least 6 characters long', {
+        position: 'top-center'
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authService.changePassword(passwords.current, passwords.new);
+      toast.success('Password changed successfully!', {
+        position: 'top-center'
+      });
+      setPasswords({ current: '', new: '', confirm: '' });
+    } catch (error) {
+      const errorMessage = error.response?.data?.detail || 'Failed to change password';
+      toast.error(errorMessage, {
+        position: 'top-center'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -246,8 +279,16 @@ const SecuritySettings = () => {
           whileTap={{ scale: 0.98 }}
           onClick={handleChangePassword}
           className="btn btn-primary"
+          disabled={loading}
         >
-          Change Password
+          {loading ? (
+            <>
+              <span className="loading loading-spinner loading-sm"></span>
+              Changing Password...
+            </>
+          ) : (
+            'Change Password'
+          )}
         </motion.button>
 
         <div className="divider"></div>

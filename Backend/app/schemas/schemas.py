@@ -77,7 +77,7 @@ class SurveyBase(BaseModel):
     land_forest: Optional[Dict[str, Any]] = None
     electricity: Optional[Dict[str, Any]] = None
     waste_management: Optional[Dict[str, Any]] = None
-    completion_percentage: int = 0
+    completion_percentage: int = Field(default=0, ge=0, le=100)
     is_complete: bool = False
 
 
@@ -96,7 +96,7 @@ class SurveyUpdate(BaseModel):
     land_forest: Optional[Dict[str, Any]] = None
     electricity: Optional[Dict[str, Any]] = None
     waste_management: Optional[Dict[str, Any]] = None
-    completion_percentage: Optional[int] = None
+    completion_percentage: Optional[int] = Field(default=None, ge=0, le=100)
     is_complete: Optional[bool] = None
     client_timestamp: Optional[datetime] = None
 
