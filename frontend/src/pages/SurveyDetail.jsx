@@ -126,11 +126,27 @@ const SurveyDetail = () => {
   const calculateCompletion = () => {
     const modules = SURVEY_MODULES.length;
     let completed = 0;
+    
     SURVEY_MODULES.forEach(module => {
-      if (formData[module.id] && Object.keys(formData[module.id]).length > 0) {
+      const moduleData = formData[module.id];
+      if (!moduleData) return;
+      
+      // Get fields for this module
+      const fields = getFieldsForModule(module.id);
+      
+      // Check if all required fields are filled
+      const requiredFields = fields.filter(f => f.required);
+      const allRequiredFilled = requiredFields.every(field => {
+        const value = moduleData[field.name];
+        return value !== undefined && value !== null && value !== '';
+      });
+      
+      // Only count module as complete if all required fields are filled
+      if (allRequiredFilled && requiredFields.length > 0) {
         completed++;
       }
     });
+    
     return Math.round((completed / modules) * 100);
   };
 
@@ -305,7 +321,7 @@ const SurveyDetail = () => {
               <span className="text-2xl font-bold text-primary">{completionPercentage}%</span>
             </div>
             <progress 
-              className="progress progress-primary w-full h-4" 
+              className="progress progress-success w-full h-4" 
               value={completionPercentage} 
               max="100"
             ></progress>
