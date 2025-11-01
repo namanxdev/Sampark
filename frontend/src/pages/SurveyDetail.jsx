@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2, FiCloud, FiCloudOff } from 'react-icons/fi';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useAuth } from '../context/AuthContext';
@@ -21,21 +21,98 @@ const SurveyDetail = () => {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState(null);
+  const [autoSaving, setAutoSaving] = useState(false);
+  const autoSaveTimerRef = useRef(null);
+  const formDataRef = useRef(formData);
 
+  // Keep formDataRef in sync with formData
+  useEffect(() => {
+    formDataRef.current = formData;
+  }, [formData]);
+
+  // Load survey data (including drafts) on mount
   useEffect(() => {
     if (survey) {
-      setFormData({
-        village_name: survey.village_name || '',
-        basic_info: survey.basic_info || {},
-        infrastructure: survey.infrastructure || {},
-        sanitation: survey.sanitation || {},
-        connectivity: survey.connectivity || {},
-        land_forest: survey.land_forest || {},
-        electricity: survey.electricity || {},
-        waste_management: survey.waste_management || {},
-      });
+      const loadData = async () => {
+        // Try to load draft first
+        const draft = await surveyService.loadDraft(surveyId);
+        
+        if (draft && draft.last_auto_save) {
+          // Use draft if it exists and has auto-save timestamp
+          console.log('📂 Restoring draft from:', new Date(draft.last_auto_save).toLocaleString());
+          setFormData({
+            village_name: draft.village_name || '',
+            basic_info: draft.basic_info || {},
+            infrastructure: draft.infrastructure || {},
+            sanitation: draft.sanitation || {},
+            connectivity: draft.connectivity || {},
+            land_forest: draft.land_forest || {},
+            electricity: draft.electricity || {},
+            waste_management: draft.waste_management || {},
+          });
+          setLastAutoSave(draft.last_auto_save);
+          toast.success('Draft restored from auto-save', { icon: '📂' });
+        } else {
+          // Use survey data
+          setFormData({
+            village_name: survey.village_name || '',
+            basic_info: survey.basic_info || {},
+            infrastructure: survey.infrastructure || {},
+            sanitation: survey.sanitation || {},
+            connectivity: survey.connectivity || {},
+            land_forest: survey.land_forest || {},
+            electricity: survey.electricity || {},
+            waste_management: survey.waste_management || {},
+          });
+        }
+      };
+      
+      loadData();
     }
-  }, [survey]);
+  }, [survey, surveyId]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const startAutoSave = () => {
+      // Clear any existing timer
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+      }
+
+      // Set up new auto-save timer (30 seconds)
+      autoSaveTimerRef.current = setInterval(async () => {
+        if (!surveyId) return;
+        
+        try {
+          setAutoSaving(true);
+          const result = await surveyService.autoSaveDraft(surveyId, formDataRef.current);
+          
+          if (result.success) {
+            setLastAutoSave(result.timestamp);
+            console.log('✅ Auto-save completed at:', new Date(result.timestamp).toLocaleString());
+          }
+        } catch (error) {
+          console.error('Auto-save failed:', error);
+        } finally {
+          setAutoSaving(false);
+        }
+      }, 30000); // 30 seconds
+
+      console.log('⏱️ Auto-save timer started (30s interval)');
+    };
+
+    // Start auto-save when component mounts
+    startAutoSave();
+
+    // Cleanup on unmount
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearInterval(autoSaveTimerRef.current);
+        console.log('⏱️ Auto-save timer cleared');
+      }
+    };
+  }, [surveyId]);
 
   const handleModuleDataChange = (moduleId, data) => {
     setFormData(prev => ({
@@ -58,27 +135,23 @@ const SurveyDetail = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const completionPercentage = calculateCompletion();
-      const updatedData = {
-        ...formData,
-        completion_percentage: completionPercentage,
-        is_complete: completionPercentage === 100,
-        client_timestamp: new Date().toISOString(),
-      };
-
-      await surveyService.updateSurvey(surveyId, updatedData);
+      const result = await surveyService.manualSave(surveyId, formData);
       
-      if (isOnline) {
-        toast.success('Survey saved and synced successfully!');
+      if (result.synced) {
+        toast.success('Survey saved and synced successfully!', { icon: '☁️' });
       } else {
-        toast.success('Survey saved locally. Will sync when online.');
+        toast.success('Survey saved locally. Will sync when online.', { icon: '💾' });
       }
+      
+      // Update last save time
+      setLastAutoSave(new Date().toISOString());
     } catch (error) {
       if (error.response?.status === 409) {
         toast.error('Conflict detected! Please resolve conflicts before saving.');
       } else {
         toast.error('Failed to save survey');
       }
+      console.error('Save error:', error);
     } finally {
       setSaving(false);
     }
@@ -146,14 +219,32 @@ const SurveyDetail = () => {
                 </h1>
                 {!isOnline && (
                   <span className="badge badge-warning gap-2">
-                    <span className="w-2 h-2 bg-warning rounded-full animate-pulse"></span>
+                    <FiCloudOff className="w-3 h-3" />
                     Offline
                   </span>
                 )}
+                {isOnline && (
+                  <span className="badge badge-success gap-2">
+                    <FiCloud className="w-3 h-3" />
+                    Online
+                  </span>
+                )}
+                {autoSaving && (
+                  <span className="badge badge-info gap-2">
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Auto-saving...
+                  </span>
+                )}
               </div>
-              <p className="text-base-content/60">
-                {panchayat?.name} • Created {new Date(survey.created_at).toLocaleDateString()}
-              </p>
+              <div className="flex items-center gap-4 text-base-content/60">
+                <span>{panchayat?.name} • Created {new Date(survey.created_at).toLocaleDateString()}</span>
+                {lastAutoSave && (
+                  <span className="text-sm flex items-center gap-1">
+                    <FiClock className="w-3 h-3" />
+                    Last saved: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
             </div>
             <div className="flex gap-3">
               <motion.button
@@ -173,7 +264,7 @@ const SurveyDetail = () => {
                 onClick={handleSave}
                 className={`btn btn-primary ${saving ? 'loading' : ''}`}
                 disabled={saving || deleting}
-                title={isOnline ? 'Save and sync' : 'Save locally (will sync when online)'}
+                title={isOnline ? 'Save and sync to server' : 'Save locally (will sync when online)'}
               >
                 {!saving && <FiSave className="mr-2" />}
                 {saving ? 'Saving...' : 'Save Survey'}
@@ -194,12 +285,18 @@ const SurveyDetail = () => {
                 <span className="font-semibold">Overall Progress</span>
                 {!isOnline && (
                   <span className="badge badge-sm badge-warning gap-1">
+                    <FiCloudOff className="w-3 h-3" />
                     Offline Mode
                   </span>
                 )}
                 {survey.synced === false && (
                   <span className="badge badge-sm badge-info gap-1">
                     Unsynced Changes
+                  </span>
+                )}
+                {survey.is_draft && (
+                  <span className="badge badge-sm badge-accent gap-1">
+                    Draft
                   </span>
                 )}
               </div>
@@ -211,9 +308,16 @@ const SurveyDetail = () => {
               max="100"
             ></progress>
             <div className="flex items-center justify-between mt-3 text-sm">
-              <div className="flex items-center text-base-content/60">
-                <FiClock className="mr-1" />
-                Last updated: {new Date(survey.updated_at).toLocaleString()}
+              <div className="flex items-center gap-4">
+                <div className="flex items-center text-base-content/60">
+                  <FiClock className="mr-1" />
+                  Last updated: {new Date(survey.updated_at).toLocaleString()}
+                </div>
+                {lastAutoSave && (
+                  <div className="flex items-center text-info gap-1">
+                    💾 Auto-saved: {new Date(lastAutoSave).toLocaleTimeString()}
+                  </div>
+                )}
               </div>
               {completionPercentage === 100 && (
                 <div className="flex items-center text-success font-semibold">
@@ -222,6 +326,14 @@ const SurveyDetail = () => {
                 </div>
               )}
             </div>
+            {!isOnline && (
+              <div className="alert alert-warning mt-4">
+                <FiCloudOff />
+                <span className="text-sm">
+                  You're working offline. Changes are auto-saved locally every 30 seconds and will sync when you're back online.
+                </span>
+              </div>
+            )}
           </Card>
         </motion.div>
 

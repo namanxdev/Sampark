@@ -395,4 +395,118 @@ export const surveyService = {
     const logs = await indexedDBService.getSyncLogs(params.limit || 50);
     return logs;
   },
+
+  /**
+   * Auto-save draft - saves to IndexedDB without syncing
+   * Called every 30 seconds during form editing
+   */
+  async autoSaveDraft(surveyId, formData) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('🔄 Auto-saving draft for survey:', surveyId);
+      
+      // Calculate completion percentage
+      const completionPercentage = this.calculateCompletion(formData);
+      
+      const draftData = {
+        ...formData,
+        completion_percentage: completionPercentage,
+        is_complete: completionPercentage === 100,
+        client_timestamp: new Date().toISOString(),
+      };
+
+      // Save draft to IndexedDB (doesn't add to sync queue)
+      await indexedDBService.saveDraft(surveyId, draftData);
+      
+      console.log('✅ Draft auto-saved successfully');
+      return { success: true, timestamp: new Date().toISOString() };
+    } catch (error) {
+      console.error('❌ Failed to auto-save draft:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  /**
+   * Manual save - saves to IndexedDB and syncs if online
+   * Called when user clicks "Save Survey" button
+   */
+  async manualSave(surveyId, formData) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('💾 Manual save for survey:', surveyId);
+      
+      const completionPercentage = this.calculateCompletion(formData);
+      
+      const updatedData = {
+        ...formData,
+        completion_percentage: completionPercentage,
+        is_complete: completionPercentage === 100,
+        client_timestamp: new Date().toISOString(),
+      };
+
+      // Mark as final (not a draft) and add to sync queue
+      await indexedDBService.markAsFinal(surveyId);
+      
+      // Now update with the latest data
+      await this.updateSurvey(surveyId, updatedData);
+      
+      console.log('✅ Manual save successful');
+      return { success: true, synced: isOnline() };
+    } catch (error) {
+      console.error('❌ Failed to manually save:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Load draft from IndexedDB
+   * Called when loading survey detail page
+   */
+  async loadDraft(surveyId) {
+    await ensureDBInitialized();
+    
+    try {
+      console.log('📂 Loading draft for survey:', surveyId);
+      const draft = await indexedDBService.getDraft(surveyId);
+      
+      if (draft) {
+        console.log('✅ Draft loaded successfully');
+        return draft;
+      }
+      
+      console.log('⚠️ No draft found');
+      return null;
+    } catch (error) {
+      console.error('❌ Failed to load draft:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Calculate completion percentage for survey
+   */
+  calculateCompletion(formData) {
+    const MODULES = [
+      'basic_info',
+      'infrastructure', 
+      'sanitation',
+      'connectivity',
+      'land_forest',
+      'electricity',
+      'waste_management'
+    ];
+    
+    const totalModules = MODULES.length;
+    let completed = 0;
+    
+    MODULES.forEach(module => {
+      if (formData[module] && Object.keys(formData[module]).length > 0) {
+        completed++;
+      }
+    });
+    
+    return Math.round((completed / totalModules) * 100);
+  },
 };
