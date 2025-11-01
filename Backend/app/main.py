@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -18,13 +18,46 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS
+# Configure CORS with wildcard support for Vercel preview deployments
+def is_cors_allowed(origin: str) -> bool:
+    """Check if origin is allowed"""
+    allowed_origins = settings.cors_origins_list
+    
+    # Check exact matches
+    if origin in allowed_origins:
+        return True
+    
+    # Allow all vercel.app subdomains
+    if origin and origin.endswith('.vercel.app'):
+        return True
+    
+    return False
+
+# Custom CORS middleware to allow Vercel preview deployments
+from fastapi import Request
+
+@app.middleware("http")
+async def cors_middleware(request: Request, call_next):
+    origin = request.headers.get("origin")
+    
+    response = await call_next(request)
+    
+    if origin and is_cors_allowed(origin):
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+    
+    return response
+
+# Also keep the standard CORS middleware for preflight requests
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_origin_regex=r"https://.*\.vercel\.app"
 )
 
 # Include routers
