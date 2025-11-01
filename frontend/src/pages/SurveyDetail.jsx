@@ -23,6 +23,7 @@ const SurveyDetail = () => {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   useEffect(() => {
     if (survey) {
@@ -217,12 +218,25 @@ const SurveyDetail = () => {
                 <FiClock className="mr-1" />
                 Last updated: {new Date(survey.updated_at).toLocaleString()}
               </div>
-              {completionPercentage === 100 && (
-                <div className="flex items-center text-success font-semibold">
-                  <FiCheckCircle className="mr-1" />
-                  Complete
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {completionPercentage === 100 && (
+                  <>
+                    <div className="flex items-center text-success font-semibold">
+                      <FiCheckCircle className="mr-1" />
+                      Complete
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setShowPreview(true)}
+                      className="btn btn-success btn-sm gap-2"
+                    >
+                      <FiCheckCircle />
+                      Preview & Submit
+                    </motion.button>
+                  </>
+                )}
+              </div>
             </div>
           </Card>
         </motion.div>
@@ -304,6 +318,141 @@ const SurveyDetail = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <PreviewModal
+          formData={formData}
+          onClose={() => setShowPreview(false)}
+          onSubmit={async () => {
+            await handleSave();
+            toast.success('🎉 Survey submitted successfully!');
+            setShowPreview(false);
+            navigate('/surveys');
+          }}
+          surveyId={surveyId}
+        />
+      )}
+    </div>
+  );
+};
+
+// ✅ NEW: Preview Modal Component
+const PreviewModal = ({ formData, onClose, onSubmit, surveyId }) => {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleFinalSubmit = async () => {
+    setSubmitting(true);
+    try {
+      await onSubmit();
+    } catch (error) {
+      toast.error('Failed to submit survey');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        className="bg-base-100 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+      >
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-base-300 flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-base-content">Survey Preview</h2>
+            <p className="text-sm text-base-content/60 mt-1">
+              Review all information before final submission
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm btn-circle"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          <div className="space-y-6">
+            {SURVEY_MODULES.map((module) => {
+              const moduleData = formData[module.id] || {};
+              const fields = getModuleFields(module.id);
+              const filledFields = fields.filter(f => {
+                const value = moduleData[f.name];
+                return value !== undefined && value !== null && value !== '';
+              });
+
+              if (filledFields.length === 0) return null;
+
+              return (
+                <motion.div
+                  key={module.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-base-200 rounded-lg p-4"
+                >
+                  <h3 className="text-lg font-bold text-base-content mb-4 flex items-center gap-2">
+                    <span className="text-2xl">{module.icon}</span>
+                    {module.name}
+                    <span className="badge badge-success badge-sm ml-2">
+                      {filledFields.length} / {fields.length} fields
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filledFields.map((field) => {
+                      const value = moduleData[field.name];
+                      return (
+                        <div key={field.name} className="bg-base-100 rounded p-3">
+                          <p className="text-xs font-semibold text-base-content/60 uppercase mb-1">
+                            {field.label}
+                          </p>
+                          <p className="text-base font-medium text-base-content">
+                            {value || '-'}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 py-4 border-t border-base-300 flex items-center justify-between bg-base-200">
+          <div className="text-sm text-base-content/60">
+            <FiCheckCircle className="inline mr-1 text-success" />
+            All required fields completed
+          </div>
+          <div className="flex gap-3">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={onClose}
+              className="btn btn-outline"
+              disabled={submitting}
+            >
+              Back to Edit
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleFinalSubmit}
+              className={`btn btn-success gap-2 ${submitting ? 'loading' : ''}`}
+              disabled={submitting}
+            >
+              {!submitting && <FiCheckCircle />}
+              {submitting ? 'Submitting...' : 'Submit Survey'}
+            </motion.button>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 };
