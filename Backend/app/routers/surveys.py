@@ -63,15 +63,25 @@ async def create_survey(
                         }
                     )
         
-        # Update existing survey with new data
-        existing_survey.village_name = survey.village_name
-        existing_survey.basic_info = survey.basic_info
-        existing_survey.infrastructure = survey.infrastructure
-        existing_survey.sanitation = survey.sanitation
-        existing_survey.connectivity = survey.connectivity
-        existing_survey.land_forest = survey.land_forest
-        existing_survey.electricity = survey.electricity
-        existing_survey.waste_management = survey.waste_management
+        # Update existing survey with new data (only update if value is provided)
+        if survey.village_name is not None:
+            existing_survey.village_name = survey.village_name
+        if survey.basic_info is not None:
+            existing_survey.basic_info = survey.basic_info
+        if survey.infrastructure is not None:
+            existing_survey.infrastructure = survey.infrastructure
+        if survey.sanitation is not None:
+            existing_survey.sanitation = survey.sanitation
+        if survey.connectivity is not None:
+            existing_survey.connectivity = survey.connectivity
+        if survey.land_forest is not None:
+            existing_survey.land_forest = survey.land_forest
+        if survey.electricity is not None:
+            existing_survey.electricity = survey.electricity
+        if survey.waste_management is not None:
+            existing_survey.waste_management = survey.waste_management
+        
+        # Always update completion tracking from client
         existing_survey.completion_percentage = survey.completion_percentage
         existing_survey.is_complete = survey.is_complete
         existing_survey.sync_status = "synced"
