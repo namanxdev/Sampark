@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2 } from 'react-icons/fi';
+import { FiArrowLeft, FiSave, FiClock, FiCheckCircle, FiTrash2, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { useSurvey } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
 import { useAuth } from '../context/AuthContext';
 import { useSync } from '../context/SyncContext';
 import { SURVEY_MODULES } from '../utils/constants';
+import { getModuleFields } from '../utils/moduleFields';
+import { calculateOverallCompletion, validateModule, calculateModuleCompletion, getCompletionStats } from '../utils/formValidation';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import toast from 'react-hot-toast';
@@ -44,16 +46,13 @@ const SurveyDetail = () => {
     }));
   };
 
+  // ✅ FIXED: Use proper field-based calculation
   const calculateCompletion = () => {
-    const modules = SURVEY_MODULES.length;
-    let completed = 0;
-    SURVEY_MODULES.forEach(module => {
-      if (formData[module.id] && Object.keys(formData[module.id]).length > 0) {
-        completed++;
-      }
-    });
-    return Math.round((completed / modules) * 100);
+    return calculateOverallCompletion(formData);
   };
+
+  // Get completion stats for display
+  const completionStats = getCompletionStats(formData);
 
   const handleSave = async () => {
     setSaving(true);
@@ -206,10 +205,13 @@ const SurveyDetail = () => {
               <span className="text-2xl font-bold text-primary">{completionPercentage}%</span>
             </div>
             <progress 
-              className="progress progress-primary w-full h-4" 
+              className="progress progress-success w-full h-4" 
               value={completionPercentage} 
               max="100"
             ></progress>
+            <div className="text-xs text-base-content/60 mt-2">
+              {completionStats.filledFields} / {completionStats.totalFields} fields completed
+            </div>
             <div className="flex items-center justify-between mt-3 text-sm">
               <div className="flex items-center text-base-content/60">
                 <FiClock className="mr-1" />
@@ -279,6 +281,24 @@ const SurveyDetail = () => {
                 moduleId={activeModule}
                 data={formData[activeModule] || {}}
                 onChange={(data) => handleModuleDataChange(activeModule, data)}
+                onNext={() => {
+                  const currentIndex = SURVEY_MODULES.findIndex(m => m.id === activeModule);
+                  if (currentIndex < SURVEY_MODULES.length - 1) {
+                    setActiveModule(SURVEY_MODULES[currentIndex + 1].id);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                onPrevious={() => {
+                  const currentIndex = SURVEY_MODULES.findIndex(m => m.id === activeModule);
+                  if (currentIndex > 0) {
+                    setActiveModule(SURVEY_MODULES[currentIndex - 1].id);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                isFirst={SURVEY_MODULES[0].id === activeModule}
+                isLast={SURVEY_MODULES[SURVEY_MODULES.length - 1].id === activeModule}
+                allFormData={formData}
+                onSave={handleSave}
               />
             </Card>
           </motion.div>
@@ -288,102 +308,182 @@ const SurveyDetail = () => {
   );
 };
 
-// Dynamic form component for each module
-const ModuleForm = ({ moduleId, data, onChange }) => {
+// ✅ UPDATED: Enhanced Module Form with Navigation and Validation
+const ModuleForm = ({ moduleId, data, onChange, onNext, onPrevious, isFirst, isLast, allFormData, onSave }) => {
+  const [validationErrors, setValidationErrors] = useState([]);
+  
   const handleInputChange = (field, value) => {
     onChange({
       ...data,
       [field]: value
     });
+    // Clear validation errors when user types
+    if (validationErrors.length > 0) {
+      setValidationErrors([]);
+    }
   };
 
-  // Generic form fields - customize based on your actual survey structure
-  const fields = getFieldsForModule(moduleId);
+  const handleNext = () => {
+    // Validate current module
+    const validation = validateModule(moduleId, data);
+    
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      toast.error(`Please fill all required fields in ${SURVEY_MODULES.find(m => m.id === moduleId)?.name}`);
+      return;
+    }
+    
+    // Auto-save before navigation
+    onSave();
+    
+    // Clear errors and navigate
+    setValidationErrors([]);
+    onNext();
+  };
+
+  const handlePrevious = () => {
+    // Auto-save before navigation (optional for previous)
+    onSave();
+    setValidationErrors([]);
+    onPrevious();
+  };
+
+  const handleFinish = () => {
+    // Validate current module
+    const validation = validateModule(moduleId, data);
+    
+    if (!validation.isValid) {
+      setValidationErrors(validation.errors);
+      toast.error('Please fill all required fields before finishing');
+      return;
+    }
+    
+    // Save and show success
+    onSave();
+    toast.success('🎉 Survey completed! All data saved.');
+  };
+
+  // Get fields from the centralized configuration
+  const fields = getModuleFields(moduleId);
+  
+  // Calculate module completion
+  const moduleCompletion = calculateModuleCompletion(moduleId, data);
+  const filledFields = Object.keys(data).filter(key => data[key] !== '' && data[key] !== null && data[key] !== undefined).length;
 
   return (
     <div className="space-y-6">
-      {fields.map((field) => (
-        <div key={field.name} className="form-control">
-          <label className="label">
-            <span className="label-text font-medium">{field.label}</span>
-            {field.required && <span className="text-error">*</span>}
-          </label>
-          {field.type === 'textarea' ? (
-            <textarea
-              className="textarea textarea-bordered h-24"
-              value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-              placeholder={field.placeholder}
-            />
-          ) : field.type === 'select' ? (
-            <select
-              className="select select-bordered"
-              value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-            >
-              <option value="">Select {field.label}</option>
-              {field.options?.map(opt => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          ) : (
-            <input
-              type={field.type || 'text'}
-              className="input input-bordered"
-              value={data[field.name] || ''}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-              placeholder={field.placeholder}
-            />
-          )}
+      {/* Module Progress Indicator */}
+      <div className="alert alert-info">
+        <div className="flex items-center justify-between w-full">
+          <span className="font-medium">
+            📝 {filledFields} / {fields.length} fields completed
+          </span>
+          <span className="badge badge-success badge-lg">{moduleCompletion}%</span>
         </div>
-      ))}
+      </div>
+
+      {/* Validation Errors */}
+      {validationErrors.length > 0 && (
+        <div className="alert alert-error">
+          <div>
+            <h3 className="font-bold">Please fix the following errors:</h3>
+            <ul className="list-disc list-inside mt-2">
+              {validationErrors.map((error, index) => (
+                <li key={index}>{error}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {/* Form Fields */}
+      <div className="space-y-4">
+        {fields.map((field) => (
+          <div key={field.name} className="form-control">
+            <label className="label">
+              <span className="label-text font-medium">
+                {field.label}
+                {field.required && <span className="text-error ml-1">*</span>}
+              </span>
+              {!field.required && (
+                <span className="label-text-alt text-base-content/50">Optional</span>
+              )}
+            </label>
+            {field.type === 'textarea' ? (
+              <textarea
+                className="textarea textarea-bordered h-24"
+                value={data[field.name] || ''}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                placeholder={field.placeholder}
+              />
+            ) : field.type === 'select' ? (
+              <select
+                className="select select-bordered"
+                value={data[field.name] || ''}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+              >
+                <option value="">Select {field.label}</option>
+                {field.options?.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type={field.type || 'text'}
+                className="input input-bordered"
+                value={data[field.name] || ''}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                placeholder={field.placeholder}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Navigation Buttons */}
+      <div className="divider"></div>
+      <div className="flex justify-between items-center pt-4">
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handlePrevious}
+          disabled={isFirst}
+          className="btn btn-outline gap-2"
+        >
+          <FiChevronLeft />
+          Previous
+        </motion.button>
+
+        <div className="text-center">
+          <p className="text-sm text-base-content/60">
+            Module {SURVEY_MODULES.findIndex(m => m.id === moduleId) + 1} of {SURVEY_MODULES.length}
+          </p>
+        </div>
+
+        {!isLast ? (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleNext}
+            className="btn btn-primary gap-2"
+          >
+            Next
+            <FiChevronRight />
+          </motion.button>
+        ) : (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleFinish}
+            className="btn btn-success gap-2"
+          >
+            <FiCheckCircle />
+            Finish
+          </motion.button>
+        )}
+      </div>
     </div>
   );
-};
-
-// Helper function to define fields for each module
-const getFieldsForModule = (moduleId) => {
-  const fieldSets = {
-    basic_info: [
-      { name: 'population', label: 'Population', type: 'number', placeholder: 'Enter total population', required: true },
-      { name: 'households', label: 'Number of Households', type: 'number', placeholder: 'Enter number of households', required: true },
-      { name: 'literacy_rate', label: 'Literacy Rate (%)', type: 'number', placeholder: 'Enter literacy rate', required: false },
-      { name: 'primary_occupation', label: 'Primary Occupation', type: 'select', options: ['Agriculture', 'Business', 'Service', 'Labor', 'Other'], required: false },
-    ],
-    infrastructure: [
-      { name: 'roads', label: 'Road Conditions', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor'], required: true },
-      { name: 'schools', label: 'Number of Schools', type: 'number', placeholder: 'Enter number of schools', required: true },
-      { name: 'hospitals', label: 'Number of Health Centers', type: 'number', placeholder: 'Enter number of health centers', required: true },
-      { name: 'community_centers', label: 'Community Centers', type: 'number', placeholder: 'Enter number of community centers', required: false },
-    ],
-    sanitation: [
-      { name: 'toilets', label: 'Household Toilets Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true },
-      { name: 'drainage', label: 'Drainage System', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
-      { name: 'water_supply', label: 'Water Supply Status', type: 'select', options: ['24x7', 'Scheduled', 'Limited', 'Insufficient'], required: true },
-    ],
-    connectivity: [
-      { name: 'mobile_network', label: 'Mobile Network Coverage', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
-      { name: 'internet', label: 'Internet Availability', type: 'select', options: ['Broadband', '4G', '3G', '2G', 'None'], required: true },
-      { name: 'transport', label: 'Public Transport', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
-    ],
-    land_forest: [
-      { name: 'agricultural_land', label: 'Agricultural Land (acres)', type: 'number', placeholder: 'Enter area in acres', required: true },
-      { name: 'forest_area', label: 'Forest Area (acres)', type: 'number', placeholder: 'Enter area in acres', required: false },
-      { name: 'irrigation', label: 'Irrigation Facilities', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: true },
-    ],
-    electricity: [
-      { name: 'coverage', label: 'Electricity Coverage (%)', type: 'number', placeholder: 'Enter percentage', required: true },
-      { name: 'supply_hours', label: 'Average Supply Hours/Day', type: 'number', placeholder: 'Enter hours', required: true },
-      { name: 'street_lights', label: 'Street Light Coverage', type: 'select', options: ['Excellent', 'Good', 'Fair', 'Poor', 'None'], required: false },
-    ],
-    waste_management: [
-      { name: 'collection_system', label: 'Waste Collection System', type: 'select', options: ['Daily', 'Weekly', 'Bi-weekly', 'None'], required: true },
-      { name: 'segregation', label: 'Waste Segregation Practice', type: 'select', options: ['Yes', 'No', 'Partial'], required: true },
-      { name: 'disposal_method', label: 'Disposal Method', type: 'select', options: ['Composting', 'Landfill', 'Burning', 'Other'], required: true },
-    ],
-  };
-
-  return fieldSets[moduleId] || [];
 };
 
 export default SurveyDetail;
