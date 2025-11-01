@@ -3,9 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiUser, FiLock, FiLogIn } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 const Login = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,10 +20,10 @@ const Login = () => {
 
     try {
       await login(username, password);
-      toast.success('Login successful! Welcome back.');
+      toast.success(t('auth:login.success'));
       navigate('/dashboard');
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Login failed. Please check your credentials.');
+      toast.error(error.response?.data?.detail || t('auth:login.error'));
     } finally {
       setLoading(false);
     }
@@ -47,10 +49,10 @@ const Login = () => {
                 🏛️
               </motion.div>
               <h1 className="text-3xl font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent">
-                Sampark
+                {t('common:app_name')}
               </h1>
               <p className="text-sm text-base-content/60 mt-2">
-                Panchayat Survey Management System
+                {t('auth:login.tagline')}
               </p>
             </div>
 
@@ -59,7 +61,7 @@ const Login = () => {
               {/* Username Field */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Username</span>
+                  <span className="label-text font-medium">{t('auth:login.username')}</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -67,7 +69,7 @@ const Login = () => {
                   </div>
                   <input
                     type="text"
-                    placeholder="Enter your username"
+                    placeholder={t('auth:login.username_placeholder')}
                     className="input input-bordered w-full pl-10"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -79,7 +81,7 @@ const Login = () => {
               {/* Password Field */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium">Password</span>
+                  <span className="label-text font-medium">{t('auth:login.password')}</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -87,7 +89,7 @@ const Login = () => {
                   </div>
                   <input
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t('auth:login.password_placeholder')}
                     className="input input-bordered w-full pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -96,7 +98,7 @@ const Login = () => {
                 </div>
                 <label className="label">
                   <Link to="/forgot-password" className="label-text-alt link link-hover text-primary">
-                    Forgot password?
+                    {t('auth:login.forgot_password')}
                   </Link>
                 </label>
               </div>
@@ -110,7 +112,7 @@ const Login = () => {
                 disabled={loading}
               >
                 {!loading && <FiLogIn className="mr-2" />}
-                {loading ? 'Signing in...' : 'Sign In'}
+                {loading ? t('auth:login.signing_in') : t('auth:login.submit')}
               </motion.button>
             </form>
 
@@ -120,11 +122,11 @@ const Login = () => {
             {/* Demo Credentials */}
             <div className="bg-info/10 rounded-lg p-4">
               <p className="text-xs text-center font-semibold text-info mb-2">
-                Demo Credentials
+                {t('auth:login.demo_credentials')}
               </p>
               <div className="text-xs space-y-1 text-center">
-                <p><strong>Admin:</strong> admin / admin123</p>
-                <p><strong>Staff:</strong> staff / staff123</p>
+                <p><strong>{t('auth:login.demo_admin')}:</strong> admin / admin123</p>
+                <p><strong>{t('auth:login.demo_staff')}:</strong> staff / staff123</p>
               </div>
             </div>
           </div>
@@ -132,7 +134,7 @@ const Login = () => {
 
         {/* Footer Text */}
         <p className="text-center text-sm text-base-content/60 mt-6">
-          Need help? Contact your block officer or admin.
+          {t('auth:login.help_text')}
         </p>
       </motion.div>
     </div>

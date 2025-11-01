@@ -7,8 +7,11 @@ import {
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import SyncStatusIndicator from './SyncStatusIndicator';
+import LanguageSwitcher from './LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 const Navbar = () => {
+  const { t } = useTranslation('common');
   const { user, logout } = useAuth();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -47,19 +50,22 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/dashboard" icon={<FiHome />}>Dashboard</NavLink>
-            <NavLink to="/surveys" icon={<FiFileText />}>Surveys</NavLink>
-            <NavLink to="/offline-demo" icon={<FiWifi />}>Offline Demo</NavLink>
+            <NavLink to="/dashboard" icon={<FiHome />}>{t('navigation.dashboard')}</NavLink>
+            <NavLink to="/surveys" icon={<FiFileText />}>{t('navigation.surveys')}</NavLink>
+            <NavLink to="/offline-demo" icon={<FiWifi />}>{t('navigation.offline_demo')}</NavLink>
             {user?.role === 'admin' && (
-              <NavLink to="/users" icon={<FiUsers />}>Users</NavLink>
+              <NavLink to="/users" icon={<FiUsers />}>{t('navigation.users')}</NavLink>
             )}
-            <NavLink to="/settings" icon={<FiSettings />}>Settings</NavLink>
+            <NavLink to="/settings" icon={<FiSettings />}>{t('navigation.settings')}</NavLink>
           </div>
 
           {/* Right Side */}
           <div className="hidden md:flex items-center space-x-4">
             {/* Sync Status Indicator */}
             <SyncStatusIndicator />
+
+            {/* Language Switcher */}
+            <LanguageSwitcher />
 
             {/* Theme Toggle */}
             <motion.button
@@ -93,10 +99,10 @@ const Navbar = () => {
                 </div>
               </motion.div>
               <ul tabIndex={0} className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-4">
-                <li><Link to="/profile">Profile</Link></li>
-                <li><Link to="/settings">Settings</Link></li>
+                <li><Link to="/profile">{t('navigation.profile')}</Link></li>
+                <li><Link to="/settings">{t('navigation.settings')}</Link></li>
                 <li><button onClick={handleLogout} className="text-error">
-                  <FiLogOut /> Logout
+                  <FiLogOut /> {t('actions.logout')}
                 </button></li>
               </ul>
             </div>
@@ -124,18 +130,18 @@ const Navbar = () => {
               <div className="px-4 py-2">
                 <SyncStatusIndicator showDetails={true} />
               </div>
-              <MobileNavLink to="/dashboard" icon={<FiHome />}>Dashboard</MobileNavLink>
-              <MobileNavLink to="/surveys" icon={<FiFileText />}>Surveys</MobileNavLink>
-              <MobileNavLink to="/offline-demo" icon={<FiWifi />}>Offline Demo</MobileNavLink>
+              <MobileNavLink to="/dashboard" icon={<FiHome />}>{t('navigation.dashboard')}</MobileNavLink>
+              <MobileNavLink to="/surveys" icon={<FiFileText />}>{t('navigation.surveys')}</MobileNavLink>
+              <MobileNavLink to="/offline-demo" icon={<FiWifi />}>{t('navigation.offline_demo')}</MobileNavLink>
               {user?.role === 'admin' && (
-                <MobileNavLink to="/users" icon={<FiUsers />}>Users</MobileNavLink>
+                <MobileNavLink to="/users" icon={<FiUsers />}>{t('navigation.users')}</MobileNavLink>
               )}
-              <MobileNavLink to="/settings" icon={<FiSettings />}>Settings</MobileNavLink>
+              <MobileNavLink to="/settings" icon={<FiSettings />}>{t('navigation.settings')}</MobileNavLink>
               <button
                 onClick={handleLogout}
                 className="btn btn-ghost text-white justify-start"
               >
-                <FiLogOut /> Logout
+                <FiLogOut /> {t('actions.logout')}
               </button>
             </div>
           </motion.div>

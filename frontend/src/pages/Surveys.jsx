@@ -9,12 +9,14 @@ import { useAuth } from '../context/AuthContext';
 import { useSync } from '../context/SyncContext';
 import { useSurveys } from '../hooks/useSurveys';
 import { surveyService } from '../services/surveyService';
+import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { STATUS_COLORS } from '../utils/constants';
 import toast from 'react-hot-toast';
 
 const Surveys = () => {
+  const { t } = useTranslation(['survey', 'common']);
   const { panchayat, user } = useAuth();
   const { isOnline } = useSync();
   const { surveys, loading, refetch } = useSurveys(panchayat?.panchayat_id);
@@ -26,35 +28,35 @@ const Surveys = () => {
     setSyncing(true);
     try {
       const result = await surveyService.batchSync(surveys);
-      toast.success(`Synced ${result.synced_count} surveys successfully`);
+      toast.success(t('common:sync.sync_complete'));
       refetch();
     } catch (error) {
-      toast.error('Sync failed. Please try again.');
+      toast.error(t('common:sync.sync_failed'));
     } finally {
       setSyncing(false);
     }
   };
 
   const handleDelete = async (surveyId) => {
-    // Different confirmation messages based on online/offline status
+    const survey = surveys.find(s => s.survey_id === surveyId);
     const confirmMessage = isOnline 
-      ? 'Are you sure you want to delete this survey? This action cannot be undone.'
-      : 'You are offline. The survey will be deleted locally and removed from the server when you go online. Continue?';
+      ? t('survey:messages.delete_confirm', { name: survey?.village_name || 'this survey' })
+      : t('survey:messages.delete_offline');
     
     if (window.confirm(confirmMessage)) {
       try {
         await surveyService.deleteSurvey(surveyId);
         
         if (isOnline) {
-          toast.success('Survey deleted successfully!');
+          toast.success(t('survey:messages.survey_deleted'));
         } else {
-          toast.success('Survey deleted locally. Will sync when online.');
+          toast.success(t('survey:messages.delete_offline'));
         }
         
         refetch();
       } catch (error) {
         console.error('Delete error:', error);
-        toast.error('Failed to delete survey. Please try again.');
+        toast.error(t('common:messages.operation_failed'));
       }
     }
   };
@@ -80,9 +82,9 @@ const Surveys = () => {
           className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8"
         >
           <div>
-            <h1 className="text-4xl font-bold text-base-content mb-2">Surveys</h1>
+            <h1 className="text-4xl font-bold text-base-content mb-2">{t('survey:title')}</h1>
             <p className="text-base-content/60">
-              Manage and track all panchayat surveys
+              {t('survey:all_surveys')}
             </p>
           </div>
           <div className="flex gap-3">
@@ -94,7 +96,7 @@ const Surveys = () => {
               disabled={syncing}
             >
               {!syncing && <FiRefreshCw className="mr-2" />}
-              Sync
+              {t('common:sync.sync_now')}
             </motion.button>
             <Link to="/surveys/new">
               <motion.button
@@ -103,7 +105,7 @@ const Surveys = () => {
                 className="btn btn-primary"
               >
                 <FiPlus className="mr-2" />
-                New Survey
+                {t('survey:new_survey')}
               </motion.button>
             </Link>
           </div>
@@ -122,7 +124,7 @@ const Surveys = () => {
                 <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-base-content/40" />
                 <input
                   type="text"
-                  placeholder="Search by village name..."
+                  placeholder={t('survey:search_placeholder')}
                   className="input input-bordered w-full pl-10"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
@@ -136,9 +138,9 @@ const Surveys = () => {
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
-                  <option value="all">All Status</option>
-                  <option value="complete">Complete</option>
-                  <option value="incomplete">Incomplete</option>
+                  <option value="all">{t('survey:status.all')}</option>
+                  <option value="complete">{t('survey:status.complete')}</option>
+                  <option value="incomplete">{t('survey:status.in_progress')}</option>
                 </select>
               </div>
             </div>
@@ -154,15 +156,15 @@ const Surveys = () => {
           >
             <Card className="text-center py-12">
               <FiSearch className="mx-auto text-6xl text-base-content/20 mb-4" />
-              <p className="text-xl text-base-content/60 mb-2">No surveys found</p>
+              <p className="text-xl text-base-content/60 mb-2">{t('survey:messages.no_surveys')}</p>
               <p className="text-base-content/40 mb-6">
-                {searchTerm ? 'Try adjusting your search' : 'Create your first survey to get started'}
+                {searchTerm ? t('survey:no_results') : t('survey:messages.create_first')}
               </p>
               {!searchTerm && (
                 <Link to="/surveys/new">
                   <button className="btn btn-primary">
                     <FiPlus className="mr-2" />
-                    Create Survey
+                    {t('survey:new_survey')}
                   </button>
                 </Link>
               )}
@@ -208,14 +210,14 @@ const Surveys = () => {
                         </p>
                       </div>
                       <div className={`badge ${syncStatus.color}`}>
-                        {syncStatus.label}
+                        {t(`common:status.${syncStatus.label}`)}
                       </div>
                     </div>
 
                     {/* Progress */}
                     <div className="mb-4">
                       <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium">Progress</span>
+                        <span className="text-sm font-medium">{t('survey:fields.progress')}</span>
                         <span className="text-sm font-bold text-primary">
                           {survey.completion_percentage || 0}%
                         </span>
@@ -230,17 +232,17 @@ const Surveys = () => {
                     {/* Info */}
                     <div className="space-y-2 mb-4 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-base-content/60">Status:</span>
+                        <span className="text-base-content/60">{t('survey:fields.status')}:</span>
                         <span className={`badge badge-sm ${survey.is_complete ? 'badge-success' : 'badge-warning'}`}>
-                          {survey.is_complete ? 'Complete' : 'In Progress'}
+                          {survey.is_complete ? t('survey:status.complete') : t('survey:status.in_progress')}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-base-content/60">Created:</span>
+                        <span className="text-base-content/60">{t('survey:fields.created_at')}:</span>
                         <span>{new Date(survey.created_at).toLocaleDateString()}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-base-content/60">Updated:</span>
+                        <span className="text-base-content/60">{t('survey:fields.updated_at')}:</span>
                         <span>{new Date(survey.updated_at).toLocaleDateString()}</span>
                       </div>
                     </div>
@@ -254,7 +256,7 @@ const Surveys = () => {
                           className="btn btn-primary btn-sm w-full"
                         >
                           <FiEye className="mr-1" />
-                          View
+                          {t('common:actions.view')}
                         </motion.button>
                       </Link>
                       <Link to={`/surveys/${surveyIdentifier}/edit`}>
@@ -262,7 +264,7 @@ const Surveys = () => {
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className="btn btn-ghost btn-sm"
-                          title="Edit survey"
+                          title={t('common:actions.edit')}
                         >
                           <FiEdit />
                         </motion.button>
@@ -272,7 +274,7 @@ const Surveys = () => {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => handleDelete(surveyIdentifier)}
                         className="btn btn-ghost btn-sm text-error"
-                        title="Delete survey"
+                        title={t('common:actions.delete')}
                       >
                         <FiTrash2 />
                       </motion.button>

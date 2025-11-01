@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { FiArrowLeft, FiSave } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { surveyService } from '../services/surveyService';
+import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
 import toast from 'react-hot-toast';
 
 const NewSurvey = () => {
+  const { t } = useTranslation(['survey', 'common']);
   const navigate = useNavigate();
   const { panchayat } = useAuth();
   const [villageName, setVillageName] = useState('');
@@ -35,10 +37,10 @@ const NewSurvey = () => {
       };
 
       const result = await surveyService.createSurvey(surveyData);
-      toast.success('Survey created successfully!');
+      toast.success(t('survey:messages.survey_created'));
       navigate(`/surveys/${result.survey_id}`);
     } catch (error) {
-      toast.error('Failed to create survey');
+      toast.error(t('common:messages.operation_failed'));
       console.error(error);
     } finally {
       setLoading(false);
@@ -57,18 +59,18 @@ const NewSurvey = () => {
             className="btn btn-ghost mb-6"
           >
             <FiArrowLeft className="mr-2" />
-            Back to Surveys
+            {t('common:actions.back')}
           </button>
 
           <Card>
             <h1 className="text-3xl font-bold text-base-content mb-6">
-              Create New Survey
+              {t('survey:new_survey')}
             </h1>
 
             <form onSubmit={handleCreate} className="space-y-6">
               {/* Panchayat Info */}
               <div className="bg-base-200 p-4 rounded-lg">
-                <p className="text-sm text-base-content/60 mb-1">Panchayat</p>
+                <p className="text-sm text-base-content/60 mb-1">{t('survey:fields.panchayat')}</p>
                 <p className="font-semibold text-lg">
                   {panchayat?.name || 'Not assigned'}
                 </p>
@@ -82,12 +84,12 @@ const NewSurvey = () => {
               {/* Village Name */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-medium text-lg">Village Name</span>
+                  <span className="label-text font-medium text-lg">{t('survey:fields.village_name')}</span>
                   <span className="text-error">*</span>
                 </label>
                 <input
                   type="text"
-                  placeholder="Enter village name"
+                  placeholder={t('survey:fields.village_name_placeholder')}
                   className="input input-bordered input-lg"
                   value={villageName}
                   onChange={(e) => setVillageName(e.target.value)}
@@ -95,7 +97,7 @@ const NewSurvey = () => {
                 />
                 <label className="label">
                   <span className="label-text-alt">
-                    This is the primary identifier for this survey
+                    {t('common:validation.required')}
                   </span>
                 </label>
               </div>
@@ -106,8 +108,7 @@ const NewSurvey = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span className="text-sm">
-                  After creating the survey, you'll be able to fill out various modules including 
-                  basic information, infrastructure, sanitation, connectivity, and more.
+                  {t('survey:messages.create_first')}
                 </span>
               </div>
 
@@ -120,7 +121,7 @@ const NewSurvey = () => {
                 disabled={loading || !villageName.trim()}
               >
                 {!loading && <FiSave className="mr-2" />}
-                {loading ? 'Creating Survey...' : 'Create Survey'}
+                {loading ? t('common:messages.saving') : t('common:actions.create')}
               </motion.button>
             </form>
           </Card>
