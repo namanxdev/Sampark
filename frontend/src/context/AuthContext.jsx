@@ -29,18 +29,24 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await authService.logout();
-    
-    // Clear IndexedDB on logout (optional - you can comment this out if you want data to persist)
     try {
-      await indexedDBService.clearAllData();
-      console.log('IndexedDB cleared on logout');
+      await authService.logout();
+      
+      // Clear IndexedDB on logout (optional - you can comment this out if you want data to persist)
+      try {
+        await indexedDBService.clearAllData();
+        console.log('IndexedDB cleared on logout');
+      } catch (error) {
+        console.error('Failed to clear IndexedDB on logout:', error);
+      }
     } catch (error) {
-      console.error('Failed to clear IndexedDB on logout:', error);
+      console.error('Error during logout:', error);
+      // Continue with logout even if there's an error
+    } finally {
+      // Always clear state, even if there's an error
+      setUser(null);
+      setPanchayat(null);
     }
-    
-    setUser(null);
-    setPanchayat(null);
   };
 
   const value = {

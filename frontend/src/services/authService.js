@@ -34,10 +34,17 @@ export const authService = {
   },
 
   async logout() {
-    await api.post('/api/auth/logout');
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_info');
-    localStorage.removeItem('panchayat_info');
+    try {
+      // Try to call logout endpoint, but don't block if it fails
+      await api.post('/api/auth/logout').catch(err => {
+        console.warn('Logout API call failed, continuing with local cleanup:', err);
+      });
+    } finally {
+      // Always clear local storage, even if API call fails
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('user_info');
+      localStorage.removeItem('panchayat_info');
+    }
   },
 
   isAuthenticated() {

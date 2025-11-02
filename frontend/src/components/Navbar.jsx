@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FiHome, FiFileText, FiUsers, FiSettings, 
@@ -9,13 +9,16 @@ import { useAuth } from '../context/AuthContext';
 import SyncStatusIndicator from './SyncStatusIndicator';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useTranslation } from 'react-i18next';
+import toast from 'react-hot-toast';
 
 const Navbar = () => {
   const { t } = useTranslation('common');
   const { user, logout } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -27,8 +30,25 @@ const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await logout();
-    window.location.href = '/login';
+    if (loggingOut) return; // Prevent double-clicking
+    
+    try {
+      setLoggingOut(true);
+      toast.loading('Logging out...', { id: 'logout' });
+      
+      await logout();
+      
+      toast.success('Logged out successfully', { id: 'logout' });
+      
+      // Small delay to ensure state is cleared
+      setTimeout(() => {
+        navigate('/login', { replace: true });
+      }, 100);
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast.error('Logout failed', { id: 'logout' });
+      setLoggingOut(false);
+    }
   };
 
   return (
@@ -102,9 +122,15 @@ const Navbar = () => {
               <ul tabIndex={0} className="dropdown-content menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-4">
                 <li><Link to="/profile">{t('navigation.profile')}</Link></li>
                 <li><Link to="/settings">{t('navigation.settings')}</Link></li>
-                <li><button onClick={handleLogout} className="text-error">
-                  <FiLogOut /> {t('actions.logout')}
-                </button></li>
+                <li>
+                  <button 
+                    onClick={handleLogout} 
+                    disabled={loggingOut}
+                    className={`text-error ${loggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    <FiLogOut /> {loggingOut ? 'Logging out...' : t('actions.logout')}
+                  </button>
+                </li>
               </ul>
             </div>
           </div>
@@ -140,9 +166,10 @@ const Navbar = () => {
               <MobileNavLink to="/settings" icon={<FiSettings />} isActive={location.pathname === '/settings'}>{t('navigation.settings')}</MobileNavLink>
               <button
                 onClick={handleLogout}
-                className="btn btn-ghost text-white justify-start"
+                disabled={loggingOut}
+                className={`btn btn-ghost text-white justify-start ${loggingOut ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
-                <FiLogOut /> {t('actions.logout')}
+                <FiLogOut /> {loggingOut ? 'Logging out...' : t('actions.logout')}
               </button>
             </div>
           </motion.div>
