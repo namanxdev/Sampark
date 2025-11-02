@@ -30,50 +30,23 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
-# Configure CORS with wildcard support for Vercel preview deployments
-def is_cors_allowed(origin: str) -> bool:
-    """Check if origin is allowed"""
-    allowed_origins = settings.cors_origins_list
-    
-    # Check exact matches
-    if origin in allowed_origins:
-        return True
-    
-    # Allow all vercel.app subdomains
-    if origin and origin.endswith('.vercel.app'):
-        return True
-    
-    # Allow custom domain (with or without www)
-    if origin and ('thesampark.tech' in origin):
-        return True
-    
-    return False
-
-# Custom CORS middleware to allow Vercel preview deployments
-from fastapi import Request
-
-@app.middleware("http")
-async def cors_middleware(request: Request, call_next):
-    origin = request.headers.get("origin")
-    
-    response = await call_next(request)
-    
-    if origin and is_cors_allowed(origin):
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "*"
-        response.headers["Access-Control-Allow-Headers"] = "*"
-    
-    return response
-
-# Also keep the standard CORS middleware for preflight requests
+# Configure CORS - Allow custom domains and Vercel deployments
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins_list,
+    allow_origins=[
+        "https://thesampark.tech",
+        "https://www.thesampark.tech",
+        "https://sampark.vercel.app",
+        "https://sampark-delta.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:3000",
+    ],
+    allow_origin_regex=r"https://.*\.vercel\.app",  # Allow all Vercel preview URLs
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    allow_origin_regex=r"https://.*\.vercel\.app"
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "User-Agent"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Include routers
