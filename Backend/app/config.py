@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+import os
 
 
 class Settings(BaseSettings):
@@ -28,6 +29,14 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "ignore"  # Ignore extra fields
 
 
+# Initialize settings
 settings = Settings()
+
+# Clean up DATABASE_URL if it has the variable name prefix (for deployment edge cases)
+if settings.DATABASE_URL.startswith("DATABASE_URL="):
+    settings.DATABASE_URL = settings.DATABASE_URL.replace("DATABASE_URL=", "").strip()
+    print(f"⚠️  Warning: DATABASE_URL had prefix, cleaned to: {settings.DATABASE_URL[:50]}...")
+

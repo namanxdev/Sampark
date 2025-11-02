@@ -1,13 +1,25 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import logging
 
 from .config import settings
 from .database import engine, Base
 from .routers import auth, surveys, schemas, sync, users
 
-# Create database tables
-Base.metadata.create_all(bind=engine)
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Create database tables (with error handling for deployment)
+try:
+    logger.info("Attempting to create database tables...")
+    Base.metadata.create_all(bind=engine)
+    logger.info("✅ Database tables created successfully!")
+except Exception as e:
+    logger.error(f"⚠️  Failed to create database tables on startup: {e}")
+    logger.error("This might be due to database connection issues. Tables will be created on first request.")
+    # Don't fail the app startup - let it continue and fail on first DB request if needed
 
 # Initialize FastAPI app
 app = FastAPI(
