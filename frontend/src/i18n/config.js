@@ -13,12 +13,14 @@ import enAuth from './locales/en/auth.json';
 import enSurvey from './locales/en/survey.json';
 import enModules from './locales/en/modules.json';
 import enSettings from './locales/en/settings.json';
+import enUsers from './locales/en/users.json';
 
 import hiCommon from './locales/hi/common.json';
 import hiAuth from './locales/hi/auth.json';
 import hiSurvey from './locales/hi/survey.json';
 import hiModules from './locales/hi/modules.json';
 import hiSettings from './locales/hi/settings.json';
+import hiUsers from './locales/hi/users.json';
 
 // Add more languages as needed
 // import paCommon from './locales/pa/common.json';
@@ -31,6 +33,7 @@ const resources = {
     survey: enSurvey,
     modules: enModules,
     settings: enSettings,
+    users: enUsers,
   },
   hi: {
     common: hiCommon,
@@ -38,6 +41,7 @@ const resources = {
     survey: hiSurvey,
     modules: hiModules,
     settings: hiSettings,
+    users: hiUsers,
   },
   // Add more languages here
 };
@@ -119,7 +123,7 @@ i18n
     returnEmptyString: false,
     
     // Load namespace on demand
-    ns: ['common', 'auth', 'survey', 'modules'],
+    ns: ['common', 'auth', 'survey', 'modules', 'users'],
     
     // Allow keys to be phrases having ':'
     nsSeparator: ':',

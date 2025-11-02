@@ -1,0 +1,87 @@
+{
+  "page_title": "User Management",
+  "page_subtitle": "Monitor user activity and survey submissions",
+  
+  "statistics": {
+    "total_users": "Total Users",
+    "active_users": "Active Users",
+    "inactive_users": "Inactive Users",
+    "admin_users": "Admin Users",
+    "staff_users": "Staff Users",
+    "total_surveys": "Total Surveys"
+  },
+  
+  "search": {
+    "placeholder": "Search users by name, username, or email...",
+    "no_results": "No users found"
+  },
+  
+  "user_card": {
+    "surveys_created": "surveys created",
+    "last_activity": "Last",
+    "active": "Active",
+    "inactive": "Inactive",
+    "email": "Email",
+    "panchayat": "Panchayat"
+  },
+  
+  "filters": {
+    "all_users": "All Users",
+    "all_status": "All Status",
+    "completed": "Completed",
+    "incomplete": "Incomplete",
+    "synced": "Synced"
+  },
+  
+  "table": {
+    "title": "All Surveys",
+    "columns": {
+      "village_name": "Village Name",
+      "created_by": "Created By",
+      "panchayat": "Panchayat",
+      "progress": "Progress",
+      "status": "Status",
+      "created_date": "Created Date",
+      "last_modified": "Last Modified"
+    },
+    "empty": {
+      "title": "No Surveys Found",
+      "subtitle": "No surveys match the current filters."
+    },
+    "unnamed_village": "Unnamed Village"
+  },
+  
+  "roles": {
+    "admin": "Admin",
+    "staff": "Staff",
+    "block_officer": "Block Officer"
+  },
+  
+  "sync_status": {
+    "synced": "Synced",
+    "pending": "Pending",
+    "failed": "Failed",
+    "conflict": "Conflict"
+  },
+  
+  "actions": {
+    "refresh": "Refresh",
+    "view_details": "View Details",
+    "edit": "Edit",
+    "delete": "Delete",
+    "activate": "Activate",
+    "deactivate": "Deactivate"
+  },
+  
+  "messages": {
+    "data_refreshed": "Data refreshed",
+    "load_failed": "Failed to load users data",
+    "surveys_load_failed": "Failed to load surveys data"
+  },
+  
+  "user_section": {
+    "title": "Users",
+    "count": "{{count}} user",
+    "count_plural": "{{count}} users"
+  }
+}

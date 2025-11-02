@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 from .config import settings
 from .database import engine, Base
-from .routers import auth, surveys, schemas, sync
+from .routers import auth, surveys, schemas, sync, users
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -69,6 +69,7 @@ app.include_router(auth.router)
 app.include_router(surveys.router)
 app.include_router(schemas.router)
 app.include_router(sync.router)
+app.include_router(users.router)
 
 
 @app.get("/")

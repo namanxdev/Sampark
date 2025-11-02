@@ -1,0 +1,87 @@
+{
+  "page_title": "उपयोगकर्ता प्रबंधन",
+  "page_subtitle": "उपयोगकर्ता गतिविधि और सर्वेक्षण सबमिशन की निगरानी करें",
+  
+  "statistics": {
+    "total_users": "कुल उपयोगकर्ता",
+    "active_users": "सक्रिय उपयोगकर्ता",
+    "inactive_users": "निष्क्रिय उपयोगकर्ता",
+    "admin_users": "प्रशासक उपयोगकर्ता",
+    "staff_users": "स्टाफ उपयोगकर्ता",
+    "total_surveys": "कुल सर्वेक्षण"
+  },
+  
+  "search": {
+    "placeholder": "नाम, उपयोगकर्ता नाम या ईमेल द्वारा खोजें...",
+    "no_results": "कोई उपयोगकर्ता नहीं मिला"
+  },
+  
+  "user_card": {
+    "surveys_created": "सर्वेक्षण बनाए गए",
+    "last_activity": "अंतिम",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय",
+    "email": "ईमेल",
+    "panchayat": "पंचायत"
+  },
+  
+  "filters": {
+    "all_users": "सभी उपयोगकर्ता",
+    "all_status": "सभी स्थिति",
+    "completed": "पूर्ण",
+    "incomplete": "अपूर्ण",
+    "synced": "सिंक किया गया"
+  },
+  
+  "table": {
+    "title": "सभी सर्वेक्षण",
+    "columns": {
+      "village_name": "गाँव का नाम",
+      "created_by": "द्वारा बनाया गया",
+      "panchayat": "पंचायत",
+      "progress": "प्रगति",
+      "status": "स्थिति",
+      "created_date": "निर्माण तिथि",
+      "last_modified": "अंतिम संशोधित"
+    },
+    "empty": {
+      "title": "कोई सर्वेक्षण नहीं मिला",
+      "subtitle": "वर्तमान फ़िल्टर से कोई सर्वेक्षण मेल नहीं खाता।"
+    },
+    "unnamed_village": "अनाम गाँव"
+  },
+  
+  "roles": {
+    "admin": "प्रशासक",
+    "staff": "स्टाफ",
+    "block_officer": "ब्लॉक अधिकारी"
+  },
+  
+  "sync_status": {
+    "synced": "सिंक किया गया",
+    "pending": "लंबित",
+    "failed": "विफल",
+    "conflict": "टकराव"
+  },
+  
+  "actions": {
+    "refresh": "ताज़ा करें",
+    "view_details": "विवरण देखें",
+    "edit": "संपादित करें",
+    "delete": "हटाएं",
+    "activate": "सक्रिय करें",
+    "deactivate": "निष्क्रिय करें"
+  },
+  
+  "messages": {
+    "data_refreshed": "डेटा ताज़ा किया गया",
+    "load_failed": "उपयोगकर्ता डेटा लोड करने में विफल",
+    "surveys_load_failed": "सर्वेक्षण डेटा लोड करने में विफल"
+  },
+  
+  "user_section": {
+    "title": "उपयोगकर्ता",
+    "count": "{{count}} उपयोगकर्ता",
+    "count_plural": "{{count}} उपयोगकर्ता"
+  }
+}
