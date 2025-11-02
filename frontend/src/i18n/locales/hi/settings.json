@@ -34,8 +34,12 @@
     "new_password": "नया पासवर्ड",
     "confirm_password": "नया पासवर्ड दोबारा दर्ज करें",
     "change_password": "पासवर्ड बदलें",
+    "changing_password": "पासवर्ड बदला जा रहा है...",
     "password_mismatch": "पासवर्ड मेल नहीं खाते",
     "password_changed": "पासवर्ड सफलतापूर्वक बदल गया!",
+    "password_change_failed": "पासवर्ड बदलने में विफल",
+    "all_fields_required": "सभी फ़ील्ड आवश्यक हैं",
+    "password_length_error": "पासवर्ड कम से कम 6 वर्णों का होना चाहिए",
     
     "two_factor": {
       "title": "दो-कारक प्रमाणीकरण",
@@ -80,6 +84,8 @@
   "preferences": {
     "title": "एप्लिकेशन प्राथमिकताएं",
     "language": "भाषा",
+    "current_language": "वर्तमान भाषा",
+    "language_changed": "भाषा सफलतापूर्वक बदल गई!",
     "date_format": "तिथि प्रारूप",
     "save_preferences": "प्राथमिकताएं सहेजें",
     

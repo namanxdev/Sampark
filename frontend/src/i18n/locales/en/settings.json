@@ -34,8 +34,12 @@
     "new_password": "New Password",
     "confirm_password": "Confirm New Password",
     "change_password": "Change Password",
+    "changing_password": "Changing Password...",
     "password_mismatch": "Passwords do not match",
     "password_changed": "Password changed successfully!",
+    "password_change_failed": "Failed to change password",
+    "all_fields_required": "All fields are required",
+    "password_length_error": "Password must be at least 6 characters",
     
     "two_factor": {
       "title": "Two-Factor Authentication",
@@ -80,6 +84,8 @@
   "preferences": {
     "title": "Application Preferences",
     "language": "Language",
+    "current_language": "Current Language",
+    "language_changed": "Language changed successfully!",
     "date_format": "Date Format",
     "save_preferences": "Save Preferences",
     

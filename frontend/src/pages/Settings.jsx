@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { useTranslation } from 'react-i18next';
 import Card from '../components/Card';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import toast from 'react-hot-toast';
 
 const Settings = () => {
@@ -38,15 +39,24 @@ const Settings = () => {
                     whileHover={{ x: 5 }}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      w-full text-left p-3 rounded-lg transition-colors flex items-center space-x-3
+                      w-full text-left p-3 rounded-lg transition-all flex items-center space-x-3 font-medium
                       ${activeTab === tab.id 
-                        ? 'bg-primary text-white' 
-                        : 'bg-base-200 hover:bg-base-300'
+                        ? 'bg-primary text-white shadow-lg border-2 border-primary' 
+                        : 'bg-base-100 hover:bg-base-200 border-2 border-transparent hover:border-base-300'
                       }
                     `}
                   >
-                    {tab.icon}
-                    <span className="font-medium">{tab.label}</span>
+                    <span className="text-lg">{tab.icon}</span>
+                    <span>{tab.label}</span>
+                    {activeTab === tab.id && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="ml-auto text-white"
+                      >
+                        ✓
+                      </motion.span>
+                    )}
                   </motion.button>
                 ))}
               </div>
@@ -408,9 +418,25 @@ const NotificationSettings = () => {
 };
 
 const PreferencesSettings = () => {
-  const { t } = useTranslation('settings');
-  const [language, setLanguage] = useState('en');
+  const { t, i18n } = useTranslation('settings');
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
+
+  const languages = [
+    { code: 'en', name: 'English', nativeName: 'English', flag: '🇬🇧' },
+    { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', flag: '🇮🇳' },
+  ];
+
+  const changeLanguage = async (langCode) => {
+    try {
+      await i18n.changeLanguage(langCode);
+      toast.success(t('preferences.language_changed'));
+    } catch (error) {
+      console.error('Failed to change language:', error);
+      toast.error('Failed to change language');
+    }
+  };
+
+  const currentLanguage = languages.find(l => l.code === i18n.language) || languages[0];
 
   return (
     <Card>
@@ -421,17 +447,50 @@ const PreferencesSettings = () => {
           <label className="label">
             <span className="label-text font-medium">{t('preferences.language')}</span>
           </label>
-          <select
-            className="select select-bordered"
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-          >
-            <option value="en">{t('preferences.languages.en')}</option>
-            <option value="hi">{t('preferences.languages.hi')}</option>
-            <option value="bn">{t('preferences.languages.bn')}</option>
-            <option value="te">{t('preferences.languages.te')}</option>
-            <option value="mr">{t('preferences.languages.mr')}</option>
-          </select>
+          
+          {/* Language Selection Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+            {languages.map((lang) => (
+              <motion.button
+                key={lang.code}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => changeLanguage(lang.code)}
+                className={`
+                  p-4 rounded-lg border-2 transition-all text-left
+                  ${i18n.language === lang.code
+                    ? 'border-primary bg-primary/10 shadow-lg'
+                    : 'border-base-300 bg-base-100 hover:border-base-400 hover:bg-base-200'
+                  }
+                `}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl" role="img" aria-label={lang.name}>
+                      {lang.flag}
+                    </span>
+                    <div>
+                      <div className="font-semibold text-lg">{lang.nativeName}</div>
+                      <div className="text-sm opacity-70">{lang.name}</div>
+                    </div>
+                  </div>
+                  {i18n.language === lang.code && (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      className="text-primary text-2xl"
+                    >
+                      ✓
+                    </motion.div>
+                  )}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+          
+          <p className="text-sm text-base-content/60 mt-2">
+            {t('preferences.current_language')}: <span className="font-semibold">{currentLanguage.nativeName}</span>
+          </p>
         </div>
 
         <div className="form-control">
