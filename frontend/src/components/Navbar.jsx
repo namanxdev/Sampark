@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FiHome, FiFileText, FiUsers, FiSettings, 
@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next';
 const Navbar = () => {
   const { t } = useTranslation('common');
   const { user, logout } = useAuth();
+  const location = useLocation();
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,13 +51,13 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-6">
-            <NavLink to="/dashboard" icon={<FiHome />}>{t('navigation.dashboard')}</NavLink>
-            <NavLink to="/surveys" icon={<FiFileText />}>{t('navigation.surveys')}</NavLink>
-            <NavLink to="/offline-demo" icon={<FiWifi />}>{t('navigation.offline_demo')}</NavLink>
+            <NavLink to="/dashboard" icon={<FiHome />} isActive={location.pathname === '/dashboard' || location.pathname === '/'}>{t('navigation.dashboard')}</NavLink>
+            <NavLink to="/surveys" icon={<FiFileText />} isActive={location.pathname === '/surveys'}>{t('navigation.surveys')}</NavLink>
+            <NavLink to="/offline-demo" icon={<FiWifi />} isActive={location.pathname === '/offline-demo'}>{t('navigation.offline_demo')}</NavLink>
             {user?.role === 'admin' && (
-              <NavLink to="/users" icon={<FiUsers />}>{t('navigation.users')}</NavLink>
+              <NavLink to="/users" icon={<FiUsers />} isActive={location.pathname === '/users'}>{t('navigation.users')}</NavLink>
             )}
-            <NavLink to="/settings" icon={<FiSettings />}>{t('navigation.settings')}</NavLink>
+            <NavLink to="/settings" icon={<FiSettings />} isActive={location.pathname === '/settings'}>{t('navigation.settings')}</NavLink>
           </div>
 
           {/* Right Side */}
@@ -130,13 +131,13 @@ const Navbar = () => {
               <div className="px-4 py-2">
                 <SyncStatusIndicator showDetails={true} />
               </div>
-              <MobileNavLink to="/dashboard" icon={<FiHome />}>{t('navigation.dashboard')}</MobileNavLink>
-              <MobileNavLink to="/surveys" icon={<FiFileText />}>{t('navigation.surveys')}</MobileNavLink>
-              <MobileNavLink to="/offline-demo" icon={<FiWifi />}>{t('navigation.offline_demo')}</MobileNavLink>
+              <MobileNavLink to="/dashboard" icon={<FiHome />} isActive={location.pathname === '/dashboard' || location.pathname === '/'}>{t('navigation.dashboard')}</MobileNavLink>
+              <MobileNavLink to="/surveys" icon={<FiFileText />} isActive={location.pathname === '/surveys'}>{t('navigation.surveys')}</MobileNavLink>
+              <MobileNavLink to="/offline-demo" icon={<FiWifi />} isActive={location.pathname === '/offline-demo'}>{t('navigation.offline_demo')}</MobileNavLink>
               {user?.role === 'admin' && (
-                <MobileNavLink to="/users" icon={<FiUsers />}>{t('navigation.users')}</MobileNavLink>
+                <MobileNavLink to="/users" icon={<FiUsers />} isActive={location.pathname === '/users'}>{t('navigation.users')}</MobileNavLink>
               )}
-              <MobileNavLink to="/settings" icon={<FiSettings />}>{t('navigation.settings')}</MobileNavLink>
+              <MobileNavLink to="/settings" icon={<FiSettings />} isActive={location.pathname === '/settings'}>{t('navigation.settings')}</MobileNavLink>
               <button
                 onClick={handleLogout}
                 className="btn btn-ghost text-white justify-start"
@@ -151,26 +152,34 @@ const Navbar = () => {
   );
 };
 
-const NavLink = ({ to, icon, children }) => (
+const NavLink = ({ to, icon, children, isActive }) => (
   <Link to={to}>
     <motion.div
       whileHover={{ scale: 1.05, y: -2 }}
-      className="flex items-center space-x-1 text-white hover:text-accent transition-colors px-3 py-2 rounded-lg hover:bg-white/10"
+      className={`flex items-center space-x-1 transition-all px-3 py-2 rounded-lg border-2 ${
+        isActive 
+          ? 'bg-white text-primary border-white shadow-lg font-bold' 
+          : 'text-white border-transparent hover:text-accent hover:bg-white/10'
+      }`}
     >
       {icon}
-      <span className="font-medium">{children}</span>
+      <span className={isActive ? 'font-bold' : 'font-medium'}>{children}</span>
     </motion.div>
   </Link>
 );
 
-const MobileNavLink = ({ to, icon, children }) => (
+const MobileNavLink = ({ to, icon, children, isActive }) => (
   <Link to={to}>
     <motion.div
       whileTap={{ scale: 0.95 }}
-      className="flex items-center space-x-3 text-white hover:bg-white/10 px-4 py-3 rounded-lg"
+      className={`flex items-center space-x-3 px-4 py-3 rounded-lg border-2 transition-all ${
+        isActive 
+          ? 'bg-white text-primary border-white shadow-lg font-bold' 
+          : 'text-white border-transparent hover:bg-white/10'
+      }`}
     >
       {icon}
-      <span>{children}</span>
+      <span className={isActive ? 'font-bold' : 'font-normal'}>{children}</span>
     </motion.div>
   </Link>
 );

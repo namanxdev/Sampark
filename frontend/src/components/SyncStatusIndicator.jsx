@@ -118,54 +118,54 @@ const SyncStatusIndicator = ({ showDetails = false }) => {
         </button>
 
         {showTooltip && (
-          <div className="absolute top-full right-0 mt-2 w-72 bg-gray-900 text-white text-xs rounded-lg shadow-xl p-4 z-50 border border-gray-700">
+          <div className="absolute top-full right-0 mt-2 w-72 bg-base-100 text-base-content text-xs rounded-lg shadow-xl p-4 z-50 border border-base-300">
             <div className="space-y-2">
-              <div className="flex items-center justify-between pb-2 border-b border-gray-700">
+              <div className="flex items-center justify-between pb-2 border-b border-base-300">
                 <span className="font-bold text-sm">Connection Status</span>
                 <span className={`font-semibold px-2 py-1 rounded ${
-                  isOnline ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'
+                  isOnline ? 'bg-success/20 text-success' : 'bg-error/20 text-error'
                 }`}>
                   {isOnline ? '🟢 Online' : '🔴 Offline'}
                 </span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-400">Last sync:</span>
+                <span className="opacity-60">Last sync:</span>
                 <span className="font-semibold">{lastSyncText}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-400">Pending changes:</span>
-                <span className={`font-semibold ${hasPendingChanges ? 'text-yellow-400' : 'text-green-400'}`}>
+                <span className="opacity-60">Pending changes:</span>
+                <span className={`font-semibold ${hasPendingChanges ? 'text-warning' : 'text-success'}`}>
                   {syncStatus.pendingOperations}
                 </span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-400">Total surveys:</span>
+                <span className="opacity-60">Total surveys:</span>
                 <span className="font-semibold">{syncStatus.totalSurveys}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-400">Unsynced surveys:</span>
-                <span className={`font-semibold ${syncStatus.unsyncedSurveys > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                <span className="opacity-60">Unsynced surveys:</span>
+                <span className={`font-semibold ${syncStatus.unsyncedSurveys > 0 ? 'text-warning' : 'text-success'}`}>
                   {syncStatus.unsyncedSurveys}
                 </span>
               </div>
             </div>
             
-            <div className="mt-3 pt-3 border-t border-gray-700">
+            <div className="mt-3 pt-3 border-t border-base-300">
               {isOnline ? (
                 <div className="text-center">
-                  <p className="text-gray-400 mb-2">Click to sync now</p>
+                  <p className="opacity-60 mb-2">Click to sync now</p>
                   {isSyncing && (
-                    <p className="text-blue-400 text-[10px]">Syncing in progress...</p>
+                    <p className="text-info text-[10px]">Syncing in progress...</p>
                   )}
                 </div>
               ) : (
                 <div className="text-center">
-                  <p className="text-red-300 font-medium">⚠️ Working Offline</p>
-                  <p className="text-gray-400 text-[10px] mt-1">
+                  <p className="text-error font-medium">⚠️ Working Offline</p>
+                  <p className="opacity-60 text-[10px] mt-1">
                     Changes are saved locally and will sync automatically when online
                   </p>
                 </div>
